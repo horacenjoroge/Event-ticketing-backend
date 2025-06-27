@@ -1,0 +1,121 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  # PostgreSQL for User Service
+  postgres-user:
+    image: postgres:15-alpine
+    container_name: postgres-user
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: user_service_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_user_data:/var/lib/postgresql/data
+      - ./infrastructure/sql/init-user-db.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - microservices
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # RabbitMQ Message Queue
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin123
+      RABBITMQ_DEFAULT_VHOST: /
+    ports:
+      - "5672:5672"    # AMQP port
+      - "15672:15672"  # Management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - microservices
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - microservices
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # User Service (commented out until we build it)
+  # user-service:
+  #   build:
+  #     context: .
+  #     dockerfile: apps/user-service/Dockerfile
+  #   container_name: user-service
+  #   environment:
+  #     - NODE_ENV=development
+  #     - DATABASE_URL=postgresql://postgres:postgres@postgres-user:5432/user_service_db
+  #     - RABBITMQ_URL=amqp://admin:admin123@rabbitmq:5672
+  #     - REDIS_URL=redis://redis:6379
+  #     - JWT_SECRET=your-super-secret-jwt-key
+  #   depends_on:
+  #     - postgres-user
+  #     - rabbitmq
+  #     - redis
+  #   volumes:
+  #     - ./apps/user-service:/usr/src/app/apps/user-service
+  #     - ./libs:/usr/src/app/libs
+  #     - /usr/src/app/node_modules
+  #   networks:
+  #     - microservices
+
+  # API Gateway (commented out until we build it)
+  # api-gateway:
+  #   build:
+  #     context: .
+  #     dockerfile: apps/api-gateway/Dockerfile
+  #   container_name: api-gateway
+  #   environment:
+  #     - NODE_ENV=development
+  #     - RABBITMQ_URL=amqp://admin:admin123@rabbitmq:5672
+  #     - REDIS_URL=redis://redis:6379
+  #     - JWT_SECRET=your-super-secret-jwt-key
+  #   ports:
+  #     - "3000:3000"
+  #   depends_on:
+  #     - rabbitmq
+  #     - redis
+  #     - user-service
+  #   volumes:
+  #     - ./apps/api-gateway:/usr/src/app/apps/api-gateway
+  #     - ./libs:/usr/src/app/libs
+  #     - /usr/src/app/node_modules
+  #   networks:
+  #     - microservices
+
+volumes:
+  postgres_user_data:
+  rabbitmq_data:
+  redis_data:
+
+networks:
+  microservices:
+    driver: bridge
