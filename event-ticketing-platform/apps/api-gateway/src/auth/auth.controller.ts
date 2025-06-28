@@ -10,11 +10,10 @@ import {
 import { ClientProxy } from '@nestjs/microservices';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { firstValueFrom } from 'rxjs';
-
-// DTOs for API Gateway (you can reuse or create new ones)
 import { IsEmail, IsString, MinLength, IsEnum, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
+// Simple DTOs - just for HTTP validation
 export class RegisterDto {
   @ApiProperty({ example: 'john@example.com' })
   @IsEmail()
@@ -62,7 +61,7 @@ export class AuthController {
   @ApiResponse({ status: 409, description: 'User already exists' })
   async register(@Body() registerDto: RegisterDto) {
     try {
-      // Send message to User Service
+      // Just forward to User Service - no auth logic here
       const result = await firstValueFrom(
         this.userServiceClient.send('auth.register', registerDto),
       );
@@ -75,7 +74,7 @@ export class AuthController {
       }
 
       return {
-        message: 'User registered successfully',
+        message: result.message,
         user: result.data.user,
         access_token: result.data.access_token,
       };
@@ -96,7 +95,7 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async login(@Body() loginDto: LoginDto) {
     try {
-      // Send message to User Service
+      // Just forward to User Service - no auth logic here
       const result = await firstValueFrom(
         this.userServiceClient.send('auth.login', loginDto),
       );
@@ -109,7 +108,7 @@ export class AuthController {
       }
 
       return {
-        message: 'Login successful',
+        message: result.message,
         user: result.data.user,
         access_token: result.data.access_token,
       };
