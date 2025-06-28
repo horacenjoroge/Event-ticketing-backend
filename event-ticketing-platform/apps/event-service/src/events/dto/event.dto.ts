@@ -1,6 +1,12 @@
 // apps/event-service/src/events/dto/event.dto.ts
-import { IsString, IsDateString, IsOptional, IsEnum, IsUUID } from 'class-validator';
-import { EventStatus } from '../../prisma/generated/prisma';
+import {
+  IsString,
+  IsDateString,
+  IsOptional,
+  IsEnum,
+  IsUUID,
+} from 'class-validator';
+import { EventStatus } from '../../../prisma/generated/prisma';
 
 export class CreateEventDto {
   @IsString()

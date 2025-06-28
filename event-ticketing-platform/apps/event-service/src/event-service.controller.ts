@@ -1,3 +1,4 @@
+// apps/event-service/src/event-service.controller.ts
 import { Controller, Get } from '@nestjs/common';
 import { EventServiceService } from './event-service.service';
 

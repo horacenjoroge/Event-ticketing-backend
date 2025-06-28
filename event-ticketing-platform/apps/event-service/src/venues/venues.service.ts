@@ -1,12 +1,7 @@
 // apps/event-service/src/venues/venues.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
-import {
-  CreateVenueDto,
-  UpdateVenueDto,
-  VenueSearchDto,
-  VenueResponseDto,
-} from './dto/venue.dto';
+import { CreateVenueDto, UpdateVenueDto, VenueSearchDto, VenueResponseDto } from './dto/venue.dto';
 
 @Injectable()
 export class VenuesService {
@@ -14,7 +9,15 @@ export class VenuesService {
 
   async create(createVenueDto: CreateVenueDto): Promise<VenueResponseDto> {
     const venue = await this.prisma.venue.create({
-      data: createVenueDto,
+      data: {
+        name: createVenueDto.name,
+        address: createVenueDto.address,
+        city: createVenueDto.city,
+        country: 'Unknown', // Provide default value since it's required
+        capacity: createVenueDto.capacity,
+        ...(createVenueDto.description && { description: createVenueDto.description }),
+        ...(createVenueDto.imageUrl && { imageUrl: createVenueDto.imageUrl }),
+      },
     });
 
     return this.formatVenueResponse(venue);
@@ -36,9 +39,9 @@ export class VenuesService {
       where.capacity = { gte: searchDto.minCapacity };
     }
     if (searchDto?.maxCapacity) {
-      where.capacity = {
+      where.capacity = { 
         ...where.capacity,
-        lte: searchDto.maxCapacity,
+        lte: searchDto.maxCapacity 
       };
     }
 
@@ -47,7 +50,7 @@ export class VenuesService {
       orderBy: { name: 'asc' },
     });
 
-    return venues.map((venue) => this.formatVenueResponse(venue));
+    return venues.map(venue => this.formatVenueResponse(venue));
   }
 
   async findById(id: string): Promise<VenueResponseDto> {
@@ -62,10 +65,7 @@ export class VenuesService {
     return this.formatVenueResponse(venue);
   }
 
-  async update(
-    id: string,
-    updateVenueDto: UpdateVenueDto,
-  ): Promise<VenueResponseDto> {
+  async update(id: string, updateVenueDto: UpdateVenueDto): Promise<VenueResponseDto> {
     const venue = await this.prisma.venue.update({
       where: { id },
       data: updateVenueDto,

@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { EventsModule } from './events/events.module';
 import { MicroserviceClientModule } from './common/microservice-client.module';
 
 @Module({
@@ -14,6 +15,7 @@ import { MicroserviceClientModule } from './common/microservice-client.module';
     MicroserviceClientModule,  // ← Provides RabbitMQ client
     AuthModule,                // ← Auth endpoints
     UsersModule,               // ← User endpoints
+    EventsModule,              // ← Event endpoints
   ],
 })
 export class AppModule {}
