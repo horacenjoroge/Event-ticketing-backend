@@ -75,4 +75,40 @@ export class UsersController {
       };
     }
   }
+
+  // ← NEW METHOD: Handle profile requests from API Gateway
+  @MessagePattern('user.get-profile')
+  async getProfile(@Payload() data: { authorization: string }) {
+    try {
+      if (!data.authorization) {
+        return {
+          success: false,
+          error: 'Authorization header required',
+        };
+      }
+
+      // Extract token from "Bearer <token>"
+      const token = data.authorization.replace('Bearer ', '');
+      
+      // Validate token and get user
+      const user = await this.usersService.validateToken(token);
+      
+      if (!user) {
+        return {
+          success: false,
+          error: 'Invalid or expired token',
+        };
+      }
+
+      return {
+        success: true,
+        data: user,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  }
 }
