@@ -161,6 +161,10 @@ const config = {
         "fromEnvVar": null,
         "value": "darwin",
         "native": true
+      },
+      {
+        "fromEnvVar": null,
+        "value": "linux-musl-openssl-3.0.x"
       }
     ],
     "previewFeatures": [],
@@ -177,6 +181,7 @@ const config = {
     "db"
   ],
   "activeProvider": "postgresql",
+  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
@@ -185,8 +190,8 @@ const config = {
       }
     }
   },
-  "inlineSchema": "// apps/user-service/prisma/schema.prisma\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"./generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel User {\n  id        String   @id @default(cuid())\n  email     String   @unique\n  password  String\n  firstName String   @map(\"first_name\")\n  lastName  String   @map(\"last_name\")\n  role      UserRole @default(CUSTOMER)\n  isActive  Boolean  @default(true) @map(\"is_active\")\n  createdAt DateTime @default(now()) @map(\"created_at\")\n  updatedAt DateTime @updatedAt @map(\"updated_at\")\n\n  // Relations for event management\n  organizerProfile OrganizerProfile?\n\n  @@map(\"users\")\n}\n\nmodel OrganizerProfile {\n  id          String   @id @default(cuid())\n  userId      String   @unique @map(\"user_id\")\n  companyName String?  @map(\"company_name\")\n  description String?\n  website     String?\n  verified    Boolean  @default(false)\n  createdAt   DateTime @default(now()) @map(\"created_at\")\n  updatedAt   DateTime @updatedAt @map(\"updated_at\")\n\n  // Relations\n  user User @relation(fields: [userId], references: [id], onDelete: Cascade)\n\n  @@map(\"organizer_profiles\")\n}\n\nenum UserRole {\n  CUSTOMER\n  ORGANIZER\n  ADMIN\n}\n",
-  "inlineSchemaHash": "49c4ba9109127a7a4e3543d4a62071feda684e285d3bdf500c4c048079be72fd",
+  "inlineSchema": "// apps/user-service/prisma/schema.prisma\ngenerator client {\n  provider      = \"prisma-client-js\"\n  output        = \"./generated/prisma\"\n  binaryTargets = [\"native\", \"linux-musl-openssl-3.0.x\"]\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel User {\n  id        String   @id @default(cuid())\n  email     String   @unique\n  password  String\n  firstName String   @map(\"first_name\")\n  lastName  String   @map(\"last_name\")\n  role      UserRole @default(CUSTOMER)\n  isActive  Boolean  @default(true) @map(\"is_active\")\n  createdAt DateTime @default(now()) @map(\"created_at\")\n  updatedAt DateTime @updatedAt @map(\"updated_at\")\n\n  // Relations for event management\n  organizerProfile OrganizerProfile?\n\n  @@map(\"users\")\n}\n\nmodel OrganizerProfile {\n  id          String   @id @default(cuid())\n  userId      String   @unique @map(\"user_id\")\n  companyName String?  @map(\"company_name\")\n  description String?\n  website     String?\n  verified    Boolean  @default(false)\n  createdAt   DateTime @default(now()) @map(\"created_at\")\n  updatedAt   DateTime @updatedAt @map(\"updated_at\")\n\n  // Relations\n  user User @relation(fields: [userId], references: [id], onDelete: Cascade)\n\n  @@map(\"organizer_profiles\")\n}\n\nenum UserRole {\n  CUSTOMER\n  ORGANIZER\n  ADMIN\n}\n",
+  "inlineSchemaHash": "8b6cd8b730dc93cabc5b9214fe86eb3625b3e37a1169a6f714bf28621cc700dc",
   "copyEngine": true
 }
 config.dirname = '/'
