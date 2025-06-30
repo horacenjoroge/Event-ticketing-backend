@@ -15,6 +15,6 @@ RUN npx prisma generate --schema=apps/ticket-service/prisma/schema.prisma
 
 RUN npm run build ticket-service
 
-EXPOSE 3002
+EXPOSE 3003
 
 CMD ["node", "dist/apps/ticket-service/main"]
