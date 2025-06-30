@@ -1,0 +1,115 @@
+// apps/ticket-service/prisma/schema.prisma
+generator client {
+  provider      = "prisma-client-js"
+  output        = "./generated/prisma"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("TICKET_DATABASE_URL")
+}
+
+enum TicketStatus {
+  AVAILABLE
+  SOLD
+  RESERVED
+  CANCELLED
+}
+
+enum ReservationStatus {
+  ACTIVE
+  EXPIRED
+  COMPLETED
+  CANCELLED
+}
+
+enum SeatStatus {
+  AVAILABLE
+  SOLD
+  RESERVED
+  MAINTENANCE
+}
+
+// Ticket Types for Events (VIP, General, Early Bird, etc.)
+model TicketType {
+  id                String   @id @default(cuid())
+  eventId           String   // Foreign key to Event Service
+  name              String   // "VIP", "General Admission", "Early Bird"
+  description       String?
+  price             Decimal  @db.Decimal(10, 2)
+  totalQuantity     Int      // Total tickets available
+  availableQuantity Int      // Current available tickets
+  soldQuantity      Int      @default(0)
+  reservedQuantity  Int      @default(0)
+  maxPerUser        Int      @default(10)
+  saleStartDate     DateTime?
+  saleEndDate       DateTime?
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  reservations Reservation[]
+  seats        Seat[]
+  inventory    Inventory?
+
+  @@map("ticket_types")
+}
+
+// Real-time inventory tracking
+model Inventory {
+  id               String     @id @default(cuid())
+  ticketTypeId     String     @unique
+  totalCount       Int
+  availableCount   Int
+  soldCount        Int        @default(0)
+  reservedCount    Int        @default(0)
+  lastUpdated      DateTime   @default(now()) @updatedAt
+  
+  // Relations
+  ticketType       TicketType @relation(fields: [ticketTypeId], references: [id], onDelete: Cascade)
+
+  @@map("inventory")
+}
+
+// Ticket reservations (temporary holds)
+model Reservation {
+  id           String            @id @default(cuid())
+  userId       String            // Foreign key to User Service
+  ticketTypeId String
+  quantity     Int
+  totalPrice   Decimal           @db.Decimal(10, 2)
+  expiresAt    DateTime
+  status       ReservationStatus @default(ACTIVE)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  // Relations
+  ticketType   TicketType        @relation(fields: [ticketTypeId], references: [id], onDelete: Cascade)
+  seats        Seat[]
+
+  @@map("reservations")
+}
+
+// Venue seating (for assigned seating events)
+model Seat {
+  id           String     @id @default(cuid())
+  venueId      String     // Foreign key to Venue (from Event Service)
+  section      String     // "A", "B", "VIP"
+  row          String     // "1", "2", "Front"
+  number       String     // "1", "2", "3"
+  status       SeatStatus @default(AVAILABLE)
+  ticketTypeId String?    // If sold/reserved
+  reservationId String?   // If reserved
+  price        Decimal?   @db.Decimal(10, 2)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // Relations
+  ticketType   TicketType?  @relation(fields: [ticketTypeId], references: [id])
+  reservation  Reservation? @relation(fields: [reservationId], references: [id])
+
+  @@unique([venueId, section, row, number])
+  @@map("seats")
+}
