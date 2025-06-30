@@ -1,0 +1,1 @@
+SELECT 'Ticket Service Database initialized successfully' AS message;
