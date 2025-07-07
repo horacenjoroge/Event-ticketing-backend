@@ -42,6 +42,24 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         }),
         inject: [ConfigService],
       },
+      {
+        name: 'TICKET_SERVICE',
+        imports: [ConfigModule],
+        useFactory: async (configService: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [
+              configService.get<string>('RABBITMQ_URL') ||
+                'amqp://admin:admin123@localhost:5672',
+            ],
+            queue: 'ticket_queue',
+            queueOptions: {
+              durable: false,
+            },
+          },
+        }),
+        inject: [ConfigService],
+      },
     ]),
   ],
   exports: [ClientsModule],
