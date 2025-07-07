@@ -45,6 +45,28 @@ services:
       timeout: 10s
       retries: 3
 
+  # PostgreSQL for Ticket Service
+  postgres-ticket:
+    image: postgres:15-alpine
+    container_name: postgres-ticket
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ticket_service_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_ticket_data:/var/lib/postgresql/data
+      - ./infrastructure/sql/init-ticket-db.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - microservices
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   # RabbitMQ
   rabbitmq:
     image: rabbitmq:3-management-alpine
@@ -92,10 +114,19 @@ services:
       dockerfile: apps/user-service/Dockerfile
     container_name: user-service
     env_file: .env
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - DATABASE_URL=${DATABASE_URL}
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      - REDIS_URL=${REDIS_URL}
+      - JWT_SECRET=${JWT_SECRET}
     depends_on:
-      - postgres-user
-      - rabbitmq
-      - redis
+      postgres-user:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
       - ./apps/user-service:/usr/src/app/apps/user-service
       - ./libs:/usr/src/app/libs
@@ -110,12 +141,49 @@ services:
       dockerfile: apps/event-service/Dockerfile
     container_name: event-service
     env_file: .env
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - EVENT_DATABASE_URL=${EVENT_DATABASE_URL}
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      - REDIS_URL=${REDIS_URL}
     depends_on:
-      - postgres-event
-      - rabbitmq
-      - redis
+      postgres-event:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
       - ./apps/event-service:/usr/src/app/apps/event-service
+      - ./libs:/usr/src/app/libs
+      - /usr/src/app/node_modules
+    networks:
+      - microservices
+
+  # Ticket Service
+  ticket-service:
+    build:
+      context: .
+      dockerfile: apps/ticket-service/Dockerfile
+    container_name: ticket-service
+    env_file: .env
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - TICKET_DATABASE_URL=${TICKET_DATABASE_URL}
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      - REDIS_URL=${REDIS_URL}
+      - RESERVATION_TIMEOUT_MINUTES=${RESERVATION_TIMEOUT_MINUTES:-15}
+      - MAX_TICKETS_PER_USER=${MAX_TICKETS_PER_USER:-10}
+      - LOW_STOCK_THRESHOLD=${LOW_STOCK_THRESHOLD:-10}
+    depends_on:
+      postgres-ticket:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./apps/ticket-service:/usr/src/app/apps/ticket-service
       - ./libs:/usr/src/app/libs
       - /usr/src/app/node_modules
     networks:
@@ -128,13 +196,25 @@ services:
       dockerfile: apps/api-gateway/Dockerfile
     container_name: api-gateway
     env_file: .env
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - API_GATEWAY_PORT=${API_GATEWAY_PORT:-3000}
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      - REDIS_URL=${REDIS_URL}
+      - JWT_SECRET=${JWT_SECRET}
     ports:
-      - "3000:3000"
+      - "${API_GATEWAY_PORT:-3000}:3000"
     depends_on:
-      - rabbitmq
-      - redis
-      - user-service
-      - event-service
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      user-service:
+        condition: service_started
+      event-service:
+        condition: service_started
+      ticket-service:
+        condition: service_started
     volumes:
       - ./apps/api-gateway:/usr/src/app/apps/api-gateway
       - ./libs:/usr/src/app/libs
@@ -145,6 +225,7 @@ services:
 volumes:
   postgres_user_data:
   postgres_event_data:
+  postgres_ticket_data:
   rabbitmq_data:
   redis_data:
 
