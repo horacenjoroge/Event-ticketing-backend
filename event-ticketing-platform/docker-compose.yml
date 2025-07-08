@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # PostgreSQL for User Service
   postgres-user:
@@ -59,6 +57,72 @@ services:
     volumes:
       - postgres_ticket_data:/var/lib/postgresql/data
       - ./infrastructure/sql/init-ticket-db.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - microservices
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # PostgreSQL for Order Service
+  postgres-order:
+    image: postgres:15-alpine
+    container_name: postgres-order
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: order_service_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_order_data:/var/lib/postgresql/data
+      - ./infrastructure/sql/init-order-db.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - microservices
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # PostgreSQL for Payment Service
+  postgres-payment:
+    image: postgres:15-alpine
+    container_name: postgres-payment
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: payment_service_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5436:5432"
+    volumes:
+      - postgres_payment_data:/var/lib/postgresql/data
+      - ./infrastructure/sql/init-payment-db.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - microservices
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # PostgreSQL for Notification Service
+  postgres-notification:
+    image: postgres:15-alpine
+    container_name: postgres-notification
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: notification_service_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5437:5432"
+    volumes:
+      - postgres_notification_data:/var/lib/postgresql/data
+      - ./infrastructure/sql/init-notification-db.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - microservices
     healthcheck:
@@ -189,6 +253,98 @@ services:
     networks:
       - microservices
 
+  # Order Service
+  order-service:
+    build:
+      context: .
+      dockerfile: apps/order-service/Dockerfile
+    container_name: order-service
+    env_file: .env
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - ORDER_DATABASE_URL=${ORDER_DATABASE_URL}
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      - REDIS_URL=${REDIS_URL}
+      - ORDER_TIMEOUT_MINUTES=${ORDER_TIMEOUT_MINUTES:-30}
+      - MAX_CART_ITEMS=${MAX_CART_ITEMS:-20}
+      - CART_EXPIRY_HOURS=${CART_EXPIRY_HOURS:-24}
+      - SAGA_TIMEOUT_MINUTES=${SAGA_TIMEOUT_MINUTES:-10}
+    depends_on:
+      postgres-order:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./apps/order-service:/usr/src/app/apps/order-service
+      - ./libs:/usr/src/app/libs
+      - /usr/src/app/node_modules
+    networks:
+      - microservices
+
+  # Payment Service - COMMENTED OUT (missing Dockerfile)
+  # payment-service:
+  #   build:
+  #     context: .
+  #     dockerfile: apps/payment-service/Dockerfile
+  #   container_name: payment-service
+  #   env_file: .env
+  #   environment:
+  #     - NODE_ENV=${NODE_ENV:-development}
+  #     - PAYMENT_DATABASE_URL=${PAYMENT_DATABASE_URL}
+  #     - RABBITMQ_URL=${RABBITMQ_URL}
+  #     - REDIS_URL=${REDIS_URL}
+  #     - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+  #     - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+  #     - PAYMENT_TIMEOUT_SECONDS=${PAYMENT_TIMEOUT_SECONDS:-30}
+  #     - SUPPORTED_CURRENCIES=${SUPPORTED_CURRENCIES}
+  #   depends_on:
+  #     postgres-payment:
+  #       condition: service_healthy
+  #     rabbitmq:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   volumes:
+  #     - ./apps/payment-service:/usr/src/app/apps/payment-service
+  #     - ./libs:/usr/src/app/libs
+  #     - /usr/src/app/node_modules
+  #   networks:
+  #     - microservices
+
+  # Notification Service - COMMENTED OUT (missing Dockerfile)
+  # notification-service:
+  #   build:
+  #     context: .
+  #     dockerfile: apps/notification-service/Dockerfile
+  #   container_name: notification-service
+  #   env_file: .env
+  #   environment:
+  #     - NODE_ENV=${NODE_ENV:-development}
+  #     - NOTIFICATION_DATABASE_URL=${NOTIFICATION_DATABASE_URL}
+  #     - RABBITMQ_URL=${RABBITMQ_URL}
+  #     - REDIS_URL=${REDIS_URL}
+  #     - SENDGRID_API_KEY=${SENDGRID_API_KEY}
+  #     - SENDGRID_FROM_EMAIL=${SENDGRID_FROM_EMAIL}
+  #     - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+  #     - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
+  #     - DAILY_EMAIL_LIMIT=${DAILY_EMAIL_LIMIT:-50}
+  #     - NOTIFICATION_QUEUE_CONCURRENCY=${NOTIFICATION_QUEUE_CONCURRENCY:-5}
+  #   depends_on:
+  #     postgres-notification:
+  #       condition: service_healthy
+  #     rabbitmq:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   volumes:
+  #     - ./apps/notification-service:/usr/src/app/apps/notification-service
+  #     - ./libs:/usr/src/app/libs
+  #     - /usr/src/app/node_modules
+  #   networks:
+  #     - microservices
+
   # API Gateway
   api-gateway:
     build:
@@ -202,6 +358,8 @@ services:
       - RABBITMQ_URL=${RABBITMQ_URL}
       - REDIS_URL=${REDIS_URL}
       - JWT_SECRET=${JWT_SECRET}
+      - CORS_ORIGINS=${CORS_ORIGINS}
+      - ENABLE_SWAGGER=${ENABLE_SWAGGER:-true}
     ports:
       - "${API_GATEWAY_PORT:-3000}:3000"
     depends_on:
@@ -215,6 +373,12 @@ services:
         condition: service_started
       ticket-service:
         condition: service_started
+      order-service:
+        condition: service_started
+      # payment-service:
+      #   condition: service_started
+      # notification-service:
+      #   condition: service_started
     volumes:
       - ./apps/api-gateway:/usr/src/app/apps/api-gateway
       - ./libs:/usr/src/app/libs
@@ -226,6 +390,9 @@ volumes:
   postgres_user_data:
   postgres_event_data:
   postgres_ticket_data:
+  postgres_order_data:
+  postgres_payment_data:
+  postgres_notification_data:
   rabbitmq_data:
   redis_data:
 
