@@ -1,0 +1,249 @@
+// apps/payment-service/prisma/schema.prisma
+generator client {
+  provider      = "prisma-client-js"
+  output        = "./generated/prisma"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("PAYMENT_DATABASE_URL")
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum PaymentMethod {
+  STRIPE
+  PAYPAL
+  BANK_TRANSFER
+  APPLE_PAY
+  GOOGLE_PAY
+}
+
+enum WebhookStatus {
+  RECEIVED
+  PROCESSING
+  PROCESSED
+  FAILED
+  IGNORED
+}
+
+enum RefundReason {
+  CUSTOMER_REQUEST
+  EVENT_CANCELLED
+  FRAUD
+  DUPLICATE_CHARGE
+  ORDER_CANCELLATION
+}
+
+// Main Payment Entity
+model Payment {
+  id                  String        @id @default(cuid())
+  orderId             String        @unique
+  userId              String        // Foreign key to User Service
+  amount              Decimal       @db.Decimal(10, 2)
+  currency            String        @default("USD")
+  status              PaymentStatus @default(PENDING)
+  paymentMethod       PaymentMethod
+  
+  // External Payment Provider Data
+  stripePaymentIntentId String?     @unique
+  stripeChargeId        String?
+  stripeCustomerId      String?
+  externalTransactionId String?     // For other payment providers
+  
+  // Payment Details
+  description         String?
+  receiptEmail        String?
+  receiptUrl          String?
+  
+  // Timing
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  processedAt         DateTime?
+  authorizedAt        DateTime?
+  capturedAt          DateTime?
+  failedAt            DateTime?
+  
+  // Failure Information
+  failureCode         String?
+  failureMessage      String?
+  
+  // Relations
+  refunds             Refund[]
+  webhookEvents       WebhookEvent[]
+  paymentEvents       PaymentEvent[]
+
+  @@map("payments")
+}
+
+// Refunds
+model Refund {
+  id                  String       @id @default(cuid())
+  paymentId           String
+  amount              Decimal      @db.Decimal(10, 2)
+  currency            String       @default("USD")
+  reason              RefundReason
+  status              PaymentStatus @default(PENDING)
+  
+  // External Provider Data
+  stripeRefundId      String?      @unique
+  externalRefundId    String?
+  
+  // Details
+  description         String?
+  requestedBy         String?      // User ID who requested refund
+  
+  // Timing
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  processedAt         DateTime?
+  
+  // Failure Information
+  failureCode         String?
+  failureMessage      String?
+
+  // Relations
+  payment             Payment      @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@map("refunds")
+}
+
+// Webhook Events from Payment Providers
+model WebhookEvent {
+  id                  String        @id @default(cuid())
+  paymentId           String?
+  eventType           String        // "payment_intent.succeeded", etc.
+  providerId          String        // Stripe event ID, PayPal transaction ID
+  provider            PaymentMethod
+  status              WebhookStatus @default(RECEIVED)
+  
+  // Event Data
+  eventData           Json          // Full webhook payload
+  signature           String?       // Webhook signature for verification
+  
+  // Processing
+  processedAt         DateTime?
+  failureReason       String?
+  retryCount          Int           @default(0)
+  maxRetries          Int           @default(3)
+  
+  // Timing
+  receivedAt          DateTime      @default(now())
+  
+  // Relations
+  payment             Payment?      @relation(fields: [paymentId], references: [id])
+
+  @@unique([providerId, provider])
+  @@map("webhook_events")
+}
+
+// Payment Event Sourcing
+model PaymentEvent {
+  id                  String        @id @default(cuid())
+  paymentId           String
+  eventType           String        // "PAYMENT_CREATED", "PAYMENT_AUTHORIZED", etc.
+  eventData           Json
+  userId              String?
+  occurredAt          DateTime      @default(now())
+  version             Int           @default(1)
+
+  // Relations
+  payment             Payment       @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@map("payment_events")
+}
+
+// Payment Methods stored for users
+model SavedPaymentMethod {
+  id                  String        @id @default(cuid())
+  userId              String
+  paymentMethod       PaymentMethod
+  
+  // Stripe Payment Method Data
+  stripePaymentMethodId String?     @unique
+  stripeCustomerId    String?
+  
+  // Card Details (tokenized)
+  cardLast4           String?
+  cardBrand           String?       // "visa", "mastercard", etc.
+  cardExpMonth        Int?
+  cardExpYear         Int?
+  
+  // Billing Details
+  billingName         String?
+  billingEmail        String?
+  billingAddress      Json?         // Address object
+  
+  // Status
+  isDefault           Boolean       @default(false)
+  isActive            Boolean       @default(true)
+  
+  // Timing
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  lastUsedAt          DateTime?
+
+  @@index([userId])
+  @@map("saved_payment_methods")
+}
+
+// Payment Provider Configuration
+model PaymentProvider {
+  id                  String        @id @default(cuid())
+  name                PaymentMethod @unique
+  isActive            Boolean       @default(true)
+  
+  // Configuration
+  config              Json          // API keys, webhooks, etc.
+  
+  // Features
+  supportsRefunds     Boolean       @default(true)
+  supportsPartialRefunds Boolean    @default(true)
+  supportsWebhooks    Boolean       @default(true)
+  
+  // Limits
+  minAmount           Decimal?      @db.Decimal(10, 2)
+  maxAmount           Decimal?      @db.Decimal(10, 2)
+  supportedCurrencies String[]      // ["USD", "EUR", "GBP"]
+  
+  // Timing
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  @@map("payment_providers")
+}
+
+// Transaction Fees and Pricing
+model TransactionFee {
+  id                  String        @id @default(cuid())
+  paymentId           String        @unique
+  
+  // Fee Breakdown
+  processingFee       Decimal       @db.Decimal(10, 2)
+  platformFee         Decimal       @db.Decimal(10, 2)
+  stripeFee           Decimal?      @db.Decimal(10, 2)
+  totalFees           Decimal       @db.Decimal(10, 2)
+  
+  // Net Amount
+  netAmount           Decimal       @db.Decimal(10, 2) // Amount after fees
+  
+  // Fee Configuration Used
+  feeConfig           Json?         // Fee structure at time of transaction
+  
+  // Timing
+  calculatedAt        DateTime      @default(now())
+
+  // Relations
+  payment             Payment       @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@map("transaction_fees")
+}
