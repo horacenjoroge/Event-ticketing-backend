@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "SagaStatus" ADD VALUE 'COMPENSATED';
