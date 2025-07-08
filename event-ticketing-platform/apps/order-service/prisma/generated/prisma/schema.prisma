@@ -1,0 +1,201 @@
+// apps/order-service/prisma/schema.prisma
+generator client {
+  provider      = "prisma-client-js"
+  output        = "./generated/prisma"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("ORDER_DATABASE_URL") // Using ORDER_DATABASE_URL as per env file
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  PAYMENT_PENDING
+  PAYMENT_FAILED
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  REFUNDED
+}
+
+enum OrderItemType {
+  TICKET
+  MERCHANDISE
+  SERVICE
+}
+
+enum SagaStatus {
+  STARTED
+  COMPENSATING
+  COMPENSATED
+  COMPLETED
+  FAILED
+}
+
+enum SagaStepStatus {
+  PENDING
+  STARTED
+  COMPLETED
+  FAILED
+  COMPENSATED
+}
+
+// Main Order Entity
+model Order {
+  id            String      @id @default(cuid())
+  userId        String // Foreign key to User Service
+  eventId       String // Foreign key to Event Service
+  totalAmount   Decimal     @db.Decimal(10, 2)
+  currency      String      @default("USD")
+  status        OrderStatus @default(PENDING)
+  paymentId     String? // Foreign key to Payment Service
+  paymentStatus String?
+  expiresAt     DateTime? // Order expiration
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  completedAt   DateTime?
+
+  // Relations
+  items         OrderItem[]
+  cartItems     CartItem[]
+  sagaExecution SagaExecution?
+  orderEvents   OrderEvent[]
+
+  @@map("orders")
+}
+
+// Order Items (tickets, merchandise)
+model OrderItem {
+  id         String        @id @default(cuid())
+  orderId    String
+  itemType   OrderItemType
+  itemId     String // ticketTypeId, merchandiseId, etc.
+  itemName   String
+  quantity   Int
+  unitPrice  Decimal       @db.Decimal(10, 2)
+  totalPrice Decimal       @db.Decimal(10, 2)
+  metadata   Json? // Additional item-specific data
+  createdAt  DateTime      @default(now())
+
+  // Relations
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("order_items")
+}
+
+// Shopping Cart
+model Cart {
+  id        String    @id @default(cuid())
+  userId    String    @unique
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Relations
+  items CartItem[]
+
+  @@map("carts")
+}
+
+model CartItem {
+  id            String        @id @default(cuid())
+  cartId        String?
+  orderId       String? // When cart is converted to order
+  userId        String
+  itemType      OrderItemType
+  itemId        String // ticketTypeId, etc.
+  itemName      String
+  quantity      Int
+  unitPrice     Decimal       @db.Decimal(10, 2)
+  totalPrice    Decimal       @db.Decimal(10, 2)
+  reservationId String? // Link to ticket reservation
+  expiresAt     DateTime? // Item reservation expiry
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Relations
+  cart  Cart?  @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  order Order? @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("cart_items")
+}
+
+// Saga Pattern for Distributed Transactions
+model SagaExecution {
+  id               String     @id @default(cuid())
+  orderId          String     @unique
+  sagaType         String // "ORDER_PROCESSING", "ORDER_CANCELLATION"
+  status           SagaStatus @default(STARTED)
+  currentStep      Int        @default(0)
+  totalSteps       Int
+  startedAt        DateTime   @default(now())
+  completedAt      DateTime?
+  failedAt         DateTime?
+  compensatedAt    DateTime? // Add this missing field
+  errorMessage     String?
+  compensationData Json? // Data needed for compensation
+
+  // Relations
+  order Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  steps SagaStep[]
+
+  @@map("saga_executions")
+}
+
+model SagaStep {
+  id               String         @id @default(cuid())
+  sagaExecutionId  String
+  stepNumber       Int
+  stepName         String // "RESERVE_TICKETS", "PROCESS_PAYMENT", etc.
+  status           SagaStepStatus @default(PENDING)
+  serviceType      String // "TICKET_SERVICE", "PAYMENT_SERVICE"
+  actionType       String // "RESERVE", "CONFIRM", "RELEASE"
+  requestData      Json? // Original request payload
+  responseData     Json? // Service response
+  compensationData Json? // Data for rollback
+  startedAt        DateTime       @default(now())
+  completedAt      DateTime?
+  failedAt         DateTime?
+  compensatedAt    DateTime?
+  errorMessage     String?
+
+  // Relations
+  sagaExecution SagaExecution @relation(fields: [sagaExecutionId], references: [id], onDelete: Cascade)
+
+  @@unique([sagaExecutionId, stepNumber])
+  @@map("saga_steps")
+}
+
+// Order Event Sourcing
+model OrderEvent {
+  id         String   @id @default(cuid())
+  orderId    String
+  eventType  String // "ORDER_CREATED", "PAYMENT_COMPLETED", etc.
+  eventData  Json
+  userId     String?
+  occurredAt DateTime @default(now())
+  version    Int      @default(1)
+
+  // Relations
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("order_events")
+}
+
+// Compensation Log (for debugging failed sagas)
+model CompensationLog {
+  id                 String   @id @default(cuid())
+  sagaExecutionId    String
+  stepName           String
+  compensationAction String
+  originalData       Json?
+  compensationData   Json?
+  success            Boolean
+  errorMessage       String?
+  executedAt         DateTime @default(now())
+
+  @@map("compensation_logs")
+}
