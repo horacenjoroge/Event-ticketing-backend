@@ -1,0 +1,309 @@
+// apps/notification-service/prisma/schema.prisma
+generator client {
+  provider      = "prisma-client-js"
+  output        = "./generated/prisma"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("NOTIFICATION_DATABASE_URL")
+}
+
+enum NotificationType {
+  EMAIL
+  SMS
+  PUSH
+  IN_APP
+  WEBHOOK
+}
+
+enum NotificationStatus {
+  PENDING
+  QUEUED
+  SENDING
+  SENT
+  DELIVERED
+  FAILED
+  BOUNCED
+  REJECTED
+}
+
+enum Priority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum TemplateType {
+  WELCOME
+  ORDER_CONFIRMATION
+  PAYMENT_SUCCESS
+  PAYMENT_FAILED
+  TICKET_GENERATED
+  EVENT_REMINDER
+  EVENT_CANCELLED
+  REFUND_PROCESSED
+  PASSWORD_RESET
+  ACCOUNT_VERIFICATION
+}
+
+// Main Notification Entity
+model Notification {
+  id                  String              @id @default(cuid())
+  userId              String?             // Target user (can be null for system notifications)
+  type                NotificationType
+  status              NotificationStatus  @default(PENDING)
+  priority            Priority            @default(NORMAL)
+  
+  // Content
+  subject             String?             // For email/push
+  title               String?             // For push/in-app
+  body                String              // Main content
+  htmlBody            String?             // HTML version for email
+  
+  // Targeting
+  recipientEmail      String?
+  recipientPhone      String?
+  recipientDeviceId   String?
+  recipientUserId     String?
+  
+  // Template Information
+  templateId          String?
+  templateType        TemplateType?
+  templateData        Json?               // Variables for template rendering
+  
+  // External Provider Data
+  providerMessageId   String?             // SendGrid message ID, Twilio SID, etc.
+  providerId          String?             // Which provider was used
+  
+  // Delivery Information
+  deliveredAt         DateTime?
+  openedAt            DateTime?
+  clickedAt           DateTime?
+  bouncedAt           DateTime?
+  
+  // Retry Logic
+  retryCount          Int                 @default(0)
+  maxRetries          Int                 @default(3)
+  nextRetryAt         DateTime?
+  
+  // Scheduling
+  scheduledFor        DateTime?           // For scheduled notifications
+  
+  // Failure Information
+  failureReason       String?
+  errorCode           String?
+  
+  // Metadata
+  tags                String[]            // For categorization
+  metadata            Json?               // Additional data
+  
+  // Timing
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  sentAt              DateTime?
+  
+  // Relations
+  events              NotificationEvent[]
+  attachments         NotificationAttachment[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([type])
+  @@index([scheduledFor])
+  @@map("notifications")
+}
+
+// Notification Templates
+model NotificationTemplate {
+  id                  String              @id @default(cuid())
+  name                String              @unique
+  type                TemplateType
+  notificationType    NotificationType
+  
+  // Template Content
+  subject             String?             // For email
+  title               String?             // For push/in-app
+  bodyTemplate        String              // Template with variables {{name}}
+  htmlTemplate        String?             // HTML version
+  
+  // Template Variables
+  variables           Json                // Required variables and their types
+  
+  // Configuration
+  isActive            Boolean             @default(true)
+  version             Int                 @default(1)
+  
+  // Localization
+  language            String              @default("en")
+  
+  // Timing
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  
+  @@unique([name, version])
+  @@map("notification_templates")
+}
+
+// Notification Events for tracking
+model NotificationEvent {
+  id                  String              @id @default(cuid())
+  notificationId      String
+  eventType           String              // "SENT", "DELIVERED", "OPENED", "CLICKED", "BOUNCED"
+  eventData           Json?
+  occurredAt          DateTime            @default(now())
+  
+  // External Provider Data
+  providerEventId     String?
+  providerData        Json?
+
+  // Relations
+  notification        Notification        @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+
+  @@map("notification_events")
+}
+
+// File Attachments for notifications
+model NotificationAttachment {
+  id                  String              @id @default(cuid())
+  notificationId      String
+  
+  // File Information
+  filename            String
+  mimeType            String
+  size                Int
+  
+  // Storage
+  fileUrl             String?             // S3 URL or local path
+  fileData            Bytes?              // For small files, store directly
+  
+  // Timing
+  createdAt           DateTime            @default(now())
+
+  // Relations
+  notification        Notification        @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+
+  @@map("notification_attachments")
+}
+
+// User Notification Preferences
+model NotificationPreference {
+  id                  String              @id @default(cuid())
+  userId              String              @unique
+  
+  // Channel Preferences
+  emailEnabled        Boolean             @default(true)
+  smsEnabled          Boolean             @default(false)
+  pushEnabled         Boolean             @default(true)
+  inAppEnabled        Boolean             @default(true)
+  
+  // Category Preferences
+  orderNotifications  Boolean             @default(true)
+  paymentNotifications Boolean            @default(true)
+  eventNotifications  Boolean             @default(true)
+  marketingNotifications Boolean          @default(false)
+  
+  // Timing Preferences
+  quietHoursStart     String?             // "22:00"
+  quietHoursEnd       String?             // "08:00"
+  timezone            String              @default("UTC")
+  
+  // Frequency Limits
+  dailyEmailLimit     Int                 @default(10)
+  dailySmsLimit       Int                 @default(3)
+  
+  // Timing
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  @@map("notification_preferences")
+}
+
+// Notification Providers Configuration
+model NotificationProvider {
+  id                  String              @id @default(cuid())
+  name                String              @unique // "sendgrid", "twilio", "firebase"
+  type                NotificationType
+  isActive            Boolean             @default(true)
+  
+  // Configuration
+  config              Json                // API keys, settings
+  
+  // Capabilities
+  supportsHtml        Boolean             @default(false)
+  supportsAttachments Boolean             @default(false)
+  supportsScheduling  Boolean             @default(false)
+  supportsTracking    Boolean             @default(false)
+  
+  // Rate Limits
+  rateLimit           Int?                // Messages per minute
+  dailyLimit          Int?                // Messages per day
+  
+  // Timing
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  @@map("notification_providers")
+}
+
+// Notification Queue for async processing
+model NotificationQueue {
+  id                  String              @id @default(cuid())
+  notificationId      String              @unique
+  
+  // Queue Information
+  queueName           String              // "high_priority", "normal", "low_priority"
+  attempts            Int                 @default(0)
+  maxAttempts         Int                 @default(3)
+  
+  // Scheduling
+  availableAt         DateTime            @default(now())
+  reservedAt          DateTime?
+  reservedUntil       DateTime?
+  
+  // Processing
+  processedAt         DateTime?
+  failedAt            DateTime?
+  errorMessage        String?
+  
+  // Timing
+  createdAt           DateTime            @default(now())
+
+  // Relations
+  notification        Notification        @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+
+  @@index([queueName, availableAt])
+  @@map("notification_queue")
+}
+
+// Notification Analytics
+model NotificationAnalytics {
+  id                  String              @id @default(cuid())
+  
+  // Aggregation Period
+  date                DateTime            @db.Date
+  hour                Int?                // For hourly analytics
+  
+  // Metrics
+  notificationType    NotificationType
+  totalSent           Int                 @default(0)
+  totalDelivered      Int                 @default(0)
+  totalOpened         Int                 @default(0)
+  totalClicked        Int                 @default(0)
+  totalFailed         Int                 @default(0)
+  totalBounced        Int                 @default(0)
+  
+  // Rates (calculated)
+  deliveryRate        Decimal?            @db.Decimal(5, 4) // 0.9876
+  openRate            Decimal?            @db.Decimal(5, 4)
+  clickRate           Decimal?            @db.Decimal(5, 4)
+  bounceRate          Decimal?            @db.Decimal(5, 4)
+  
+  // Timing
+  updatedAt           DateTime            @updatedAt
+
+  @@unique([date, hour, notificationType])
+  @@map("notification_analytics")
+}
