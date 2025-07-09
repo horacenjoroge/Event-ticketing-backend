@@ -5,9 +5,10 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { EventsModule } from './events/events.module';
 import { TicketsModule } from './tickets/tickets.module';
-import { OrdersModule } from './orders/orders.module';         // ← Add this import
-import { PaymentsModule } from './payments/payments.module';   // ← Add this import
-import { NotificationsModule } from './notifications/notifications.module'; // ← Add this import
+import { OrdersModule } from './orders/orders.module';
+import { TestModule } from './test/test.module'; // ✅ Import TestModule
+// import { PaymentsModule } from './payments/payments.module';   // ← Comment out
+// import { NotificationsModule } from './notifications/notifications.module'; // ← Comment out
 import { MicroserviceClientModule } from './common/microservice-client.module';
 
 @Module({
@@ -16,14 +17,15 @@ import { MicroserviceClientModule } from './common/microservice-client.module';
       isGlobal: true,
       envFilePath: ['../../.env'],
     }),
-    MicroserviceClientModule,  // ← Provides RabbitMQ client for all services
-    AuthModule,                // ← Auth endpoints
-    UsersModule,               // ← User endpoints
-    EventsModule,              // ← Event endpoints
-    TicketsModule,             // ← Ticket endpoints
-    OrdersModule,              // ← Order endpoints (Cart, Orders, Saga)
-    PaymentsModule,            // ← Payment endpoints (Stripe, Refunds, Webhooks)
-    NotificationsModule,       // ← Notification endpoints (Email, SMS, Push)
+    MicroserviceClientModule,
+    AuthModule,
+    UsersModule,
+    EventsModule,
+    TicketsModule,
+    OrdersModule,
+    TestModule, // ✅ Add TestModule here
+    // PaymentsModule,            // ← Comment out
+    // NotificationsModule,       // ← Comment out
   ],
 })
 export class AppModule {}
