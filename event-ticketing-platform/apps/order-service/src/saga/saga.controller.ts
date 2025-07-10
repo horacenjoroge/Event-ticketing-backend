@@ -30,7 +30,9 @@ interface CompensateStepPayload {
 export class SagaController {
   private readonly logger = new Logger(SagaController.name);
 
-  constructor(private readonly sagaService: SagaService) {}
+  constructor(private readonly sagaService: SagaService) {
+    this.logger.log('🚀 SagaController initialized and ready to receive messages!');
+  }
 
   @MessagePattern('saga.checkout')
   async startCheckoutSaga(@Payload() payload: CheckoutSagaPayload) {
@@ -105,6 +107,7 @@ export class SagaController {
     responseData: any;
   }) {
     try {
+      this.logger.log(`🔥 RECEIVED COMPLETION MESSAGE: ${JSON.stringify(payload)}`);
       this.logger.log(`Saga step completed: ${payload.sagaExecutionId} step ${payload.stepNumber}`);
 
       const result = await this.sagaService.completeStep(

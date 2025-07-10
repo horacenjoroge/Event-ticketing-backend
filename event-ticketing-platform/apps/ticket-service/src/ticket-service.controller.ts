@@ -41,12 +41,18 @@ export class TicketServiceController {
         payload.requestData.items
       );
 
+      this.logger.log(`Reservation successful, notifying saga: ${payload.sagaExecutionId}`);
+
+      this.logger.log(`🔥 ABOUT TO SEND completion message for saga: ${payload.sagaExecutionId}`);
+
       // Send success back to saga orchestrator
       this.orderClient.emit('saga.step.completed', {
         sagaExecutionId: payload.sagaExecutionId,
         stepNumber: payload.stepNumber,
         responseData: reservationResult,
       });
+
+      this.logger.log(`🔥 COMPLETION MESSAGE SENT!`);
 
       return {
         success: true,
@@ -87,6 +93,8 @@ export class TicketServiceController {
       const confirmationResult = await this.ticketServiceService.confirmTickets(
         payload.requestData.orderId
       );
+
+      this.logger.log(`Confirmation successful, notifying saga: ${payload.sagaExecutionId}`);
 
       // Send success back to saga orchestrator
       this.orderClient.emit('saga.step.completed', {
@@ -134,6 +142,8 @@ export class TicketServiceController {
       const releaseResult = await this.ticketServiceService.releaseTickets(
         payload.requestData.orderId
       );
+
+      this.logger.log(`Release successful, notifying saga: ${payload.sagaExecutionId}`);
 
       // Send success back to saga orchestrator (optional for compensation)
       this.orderClient.emit('saga.step.completed', {
