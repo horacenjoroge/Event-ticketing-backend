@@ -2,7 +2,7 @@
 import { Injectable, Logger, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { ConfigService } from '@nestjs/config';
-import { SagaStatus, SagaStepStatus } from '../../prisma/generated/prisma';
+import { SagaStatus, SagaStepStatus, OrderStatus } from '../../prisma/generated/prisma';
 import { OrderService } from '../order/order.service';
 import { CompensationService } from '../saga/compensation.service';
 import { ClientProxy } from '@nestjs/microservices';
@@ -100,11 +100,18 @@ export class SagaService {
         actionType: 'PROCESS',
         requestData: {
           orderId,
-          amount: order.totalAmount,
-          currency: 'USD',
+          amount: parseFloat(order.totalAmount.toString()),
+          currency: 'USD', // TODO: Make this configurable
           paymentMethodId,
-          billingEmail,
-          billingDetails,
+          customerEmail: billingEmail,
+          customerPhone: billingDetails?.phone,
+          paymentMethod: 'CARD', // TODO: Determine from paymentMethodId
+          description: `Payment for order ${orderId}`,
+          metadata: {
+            userId,
+            sagaExecutionId: sagaExecution.id,
+            ...billingDetails,
+          },
         },
       },
       {
@@ -125,6 +132,10 @@ export class SagaService {
           orderId,
           templateType: 'ORDER_CONFIRMATION',
           recipientEmail: billingEmail,
+          metadata: {
+            orderAmount: order.totalAmount,
+            paymentMethodId,
+          },
         },
       },
     ];
@@ -184,17 +195,24 @@ export class SagaService {
       {
         stepName: 'CANCEL_PAYMENT',
         serviceType: 'PAYMENT_SERVICE',
-        actionType: 'CANCEL',
+        actionType: 'REFUND',
+        requestData: { orderId, userId },
       },
       {
         stepName: 'RELEASE_TICKETS',
         serviceType: 'TICKET_SERVICE',
         actionType: 'RELEASE',
+        requestData: { orderId, userId },
       },
       {
         stepName: 'SEND_CANCELLATION_NOTICE',
         serviceType: 'NOTIFICATION_SERVICE',
         actionType: 'SEND',
+        requestData: { 
+          orderId, 
+          userId,
+          templateType: 'ORDER_CANCELLATION',
+        },
       },
     ];
 
@@ -209,7 +227,7 @@ export class SagaService {
             status: SagaStepStatus.PENDING,
             serviceType: step.serviceType,
             actionType: step.actionType,
-            requestData: { orderId, userId },
+            requestData: step.requestData,
           },
         })
       )
@@ -243,6 +261,297 @@ export class SagaService {
     }
 
     return sagaExecution;
+  }
+
+  async getActiveSagas(limit: number = 50, offset: number = 0) {
+    this.logger.log(`Getting active sagas (limit: ${limit}, offset: ${offset})`);
+
+    const activeSagas = await this.prisma.sagaExecution.findMany({
+      where: {
+        status: {
+          in: [SagaStatus.STARTED, SagaStatus.COMPENSATING],
+        },
+      },
+      include: {
+        steps: {
+          orderBy: { stepNumber: 'asc' },
+        },
+        order: {
+          select: {
+            id: true,
+            userId: true,
+            totalAmount: true,
+            status: true,
+            createdAt: true,
+          },
+        },
+      },
+      orderBy: {
+        startedAt: 'desc',
+      },
+      take: limit,
+      skip: offset,
+    });
+
+    const totalCount = await this.prisma.sagaExecution.count({
+      where: {
+        status: {
+          in: [SagaStatus.STARTED, SagaStatus.COMPENSATING],
+        },
+      },
+    });
+
+    return {
+      sagas: activeSagas,
+      totalCount,
+      hasMore: offset + limit < totalCount,
+    };
+  }
+
+  async getHealthStatus() {
+    this.logger.log('Getting saga health status');
+
+    const now = new Date();
+    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+    // Get saga statistics
+    const [
+      totalSagas,
+      activeSagas,
+      completedSagasLast24h,
+      failedSagasLast24h,
+      compensatedSagasLast24h,
+      stuckSagas, // Sagas that have been running for more than saga timeout
+    ] = await Promise.all([
+      this.prisma.sagaExecution.count(),
+      this.prisma.sagaExecution.count({
+        where: {
+          status: {
+            in: [SagaStatus.STARTED, SagaStatus.COMPENSATING],
+          },
+        },
+      }),
+      this.prisma.sagaExecution.count({
+        where: {
+          status: SagaStatus.COMPLETED,
+          completedAt: {
+            gte: oneDayAgo,
+          },
+        },
+      }),
+      this.prisma.sagaExecution.count({
+        where: {
+          status: SagaStatus.FAILED,
+          failedAt: {
+            gte: oneDayAgo,
+          },
+        },
+      }),
+      this.prisma.sagaExecution.count({
+        where: {
+          status: SagaStatus.COMPENSATED,
+          compensatedAt: {
+            gte: oneDayAgo,
+          },
+        },
+      }),
+      this.prisma.sagaExecution.count({
+        where: {
+          status: SagaStatus.STARTED,
+          startedAt: {
+            lt: new Date(now.getTime() - this.sagaTimeoutMinutes * 60 * 1000),
+          },
+        },
+      }),
+    ]);
+
+    // Calculate success rate
+    const totalProcessedLast24h = completedSagasLast24h + failedSagasLast24h + compensatedSagasLast24h;
+    const successRate = totalProcessedLast24h > 0 
+      ? (completedSagasLast24h / totalProcessedLast24h) * 100 
+      : 0;
+
+    // Get average completion time for last 24h
+    const recentCompletedSagas = await this.prisma.sagaExecution.findMany({
+      where: {
+        status: SagaStatus.COMPLETED,
+        completedAt: {
+          gte: oneDayAgo,
+        },
+      },
+      select: {
+        startedAt: true,
+        completedAt: true,
+      },
+    });
+
+    const avgCompletionTimeMs = recentCompletedSagas.length > 0
+      ? recentCompletedSagas.reduce((sum, saga) => {
+          const duration = saga.completedAt!.getTime() - saga.startedAt!.getTime();
+          return sum + duration;
+        }, 0) / recentCompletedSagas.length
+      : 0;
+
+    return {
+      service: 'saga-orchestrator',
+      status: stuckSagas > 0 ? 'warning' : 'healthy',
+      timestamp: new Date().toISOString(),
+      metrics: {
+        total: {
+          totalSagas,
+          activeSagas,
+          stuckSagas,
+        },
+        last24Hours: {
+          completed: completedSagasLast24h,
+          failed: failedSagasLast24h,
+          compensated: compensatedSagasLast24h,
+          successRate: Math.round(successRate * 100) / 100,
+        },
+        performance: {
+          averageCompletionTimeSeconds: Math.round(avgCompletionTimeMs / 1000),
+          timeoutThresholdMinutes: this.sagaTimeoutMinutes,
+        },
+      },
+      warnings: stuckSagas > 0 ? [`${stuckSagas} sagas may be stuck`] : [],
+    };
+  }
+
+  async getSagasByOrderId(orderId: string) {
+    this.logger.log(`Getting all sagas for order ${orderId}`);
+
+    return this.prisma.sagaExecution.findMany({
+      where: { orderId },
+      include: {
+        steps: {
+          orderBy: { stepNumber: 'asc' },
+        },
+      },
+      orderBy: {
+        startedAt: 'desc',
+      },
+    });
+  }
+
+  async getSagasByUserId(userId: string, limit: number = 20, offset: number = 0) {
+    this.logger.log(`Getting sagas for user ${userId}`);
+
+    return this.prisma.sagaExecution.findMany({
+      where: {
+        order: {
+          userId,
+        },
+      },
+      include: {
+        steps: {
+          orderBy: { stepNumber: 'asc' },
+        },
+        order: {
+          select: {
+            id: true,
+            totalAmount: true,
+            status: true,
+            createdAt: true,
+          },
+        },
+      },
+      orderBy: {
+        startedAt: 'desc',
+      },
+      take: limit,
+      skip: offset,
+    });
+  }
+
+  async getSagaMetrics(startDate: Date, endDate: Date) {
+    this.logger.log(`Getting saga metrics from ${startDate.toISOString()} to ${endDate.toISOString()}`);
+
+    const sagas = await this.prisma.sagaExecution.findMany({
+      where: {
+        startedAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      include: {
+        steps: true,
+      },
+    });
+
+    // Calculate metrics
+    const metrics = {
+      totalSagas: sagas.length,
+      byStatus: {
+        completed: sagas.filter(s => s.status === SagaStatus.COMPLETED).length,
+        failed: sagas.filter(s => s.status === SagaStatus.FAILED).length,
+        compensated: sagas.filter(s => s.status === SagaStatus.COMPENSATED).length,
+        active: sagas.filter(s => s.status === SagaStatus.STARTED).length,
+      },
+      byType: {
+        checkout: sagas.filter(s => s.sagaType === 'ORDER_PROCESSING').length,
+        cancellation: sagas.filter(s => s.sagaType === 'ORDER_CANCELLATION').length,
+      },
+      stepFailures: {} as Record<string, number>,
+      averageCompletionTime: 0,
+    };
+
+    // Calculate step failure statistics
+    sagas.forEach(saga => {
+      saga.steps.forEach(step => {
+        if (step.status === SagaStepStatus.FAILED) {
+          metrics.stepFailures[step.stepName] = (metrics.stepFailures[step.stepName] || 0) + 1;
+        }
+      });
+    });
+
+    // Calculate average completion time for completed sagas
+    const completedSagas = sagas.filter(s => s.status === SagaStatus.COMPLETED && s.completedAt);
+    if (completedSagas.length > 0) {
+      const totalCompletionTime = completedSagas.reduce((sum, saga) => {
+        const duration = saga.completedAt!.getTime() - saga.startedAt!.getTime();
+        return sum + duration;
+      }, 0);
+      metrics.averageCompletionTime = Math.round(totalCompletionTime / completedSagas.length / 1000); // in seconds
+    }
+
+    return metrics;
+  }
+
+  // Add this method to handle cleanup of old sagas
+  async cleanupOldSagas(olderThanDays: number = 30) {
+    this.logger.log(`Cleaning up sagas older than ${olderThanDays} days`);
+
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - olderThanDays);
+
+    const deletedCount = await this.prisma.sagaExecution.deleteMany({
+      where: {
+        startedAt: {
+          lt: cutoffDate,
+        },
+        status: {
+          in: [SagaStatus.COMPLETED, SagaStatus.FAILED, SagaStatus.COMPENSATED],
+        },
+      },
+    });
+
+    this.logger.log(`Cleaned up ${deletedCount.count} old saga executions`);
+    return deletedCount;
+  }
+
+  async findSagaByOrderId(orderId: string) {
+    return this.prisma.sagaExecution.findFirst({
+      where: { 
+        orderId,
+        status: {
+          in: [SagaStatus.STARTED, SagaStatus.COMPENSATING]
+        }
+      },
+      include: {
+        steps: true,
+      },
+    });
   }
 
   async completeStep(sagaExecutionId: string, stepNumber: number, responseData: any) {
@@ -441,8 +750,6 @@ export class SagaService {
       sagaExecutionId,
       stepNumber,
       requestData: step.requestData,
-      callbackPattern: 'saga.step.completed',
-      errorCallbackPattern: 'saga.step.failed',
     };
 
     try {
@@ -471,17 +778,41 @@ export class SagaService {
 
   private async sendToTicketService(actionType: string, message: any) {
     const pattern = `ticket.${actionType.toLowerCase()}`;
-    await this.ticketClient.emit(pattern, message).toPromise();
+    this.logger.log(`Sending ${pattern} to ticket service`);
+    await this.ticketClient.emit(pattern, message);
   }
 
   private async sendToPaymentService(actionType: string, message: any) {
-    const pattern = `payment.${actionType.toLowerCase()}`;
-    await this.paymentClient.emit(pattern, message).toPromise();
+    let pattern: string;
+    
+    switch (actionType.toLowerCase()) {
+      case 'process':
+        pattern = 'payment.process';
+        break;
+      case 'cancel':
+      case 'refund':
+        pattern = 'payment.refund';
+        break;
+      default:
+        pattern = `payment.${actionType.toLowerCase()}`;
+    }
+    
+    this.logger.log(`Sending ${pattern} to payment service`);
+    
+    try {
+      // Use emit for fire-and-forget message
+      await this.paymentClient.emit(pattern, message);
+      this.logger.log(`Successfully sent ${pattern} to payment service`);
+    } catch (error) {
+      this.logger.error(`Payment service error: ${error.message}`);
+      throw error;
+    }
   }
 
   private async sendToNotificationService(actionType: string, message: any) {
     const pattern = `notification.${actionType.toLowerCase()}`;
-    await this.notificationClient.emit(pattern, message).toPromise();
+    this.logger.log(`Sending ${pattern} to notification service`);
+    await this.notificationClient.emit(pattern, message);
   }
 
   private async completeSaga(sagaExecutionId: string) {
@@ -498,9 +829,10 @@ export class SagaService {
       },
     });
 
-    // Update order status to confirmed
-    await this.orderService.updateOrderStatus(sagaExecution.orderId, 'CONFIRMED');
+    // FIX: Use proper OrderStatus enum instead of string literal
+    await this.orderService.updateOrderStatus(sagaExecution.orderId, OrderStatus.CONFIRMED);
 
+    this.logger.log(`✅ Saga ${sagaExecutionId} completed successfully`);
     return sagaExecution;
   }
 
@@ -534,6 +866,10 @@ export class SagaService {
           status: SagaStatus.FAILED,
         },
       });
+      
+      // FIX: Use proper OrderStatus enum instead of string literal
+      await this.orderService.updateOrderStatus(sagaExecution.orderId, OrderStatus.CANCELLED);
+      
       return sagaExecution;
     }
 
@@ -552,8 +888,10 @@ export class SagaService {
         },
       });
 
-      // Update order status back to pending or cancelled
-      await this.orderService.updateOrderStatus(sagaExecution.orderId, 'CANCELLED');
+      // FIX: Use proper OrderStatus enum instead of string literal
+      await this.orderService.updateOrderStatus(sagaExecution.orderId, OrderStatus.CANCELLED);
+
+      this.logger.log(`✅ Saga ${sagaExecutionId} compensated successfully`);
 
     } catch (compensationError) {
       this.logger.error(`Compensation failed for saga ${sagaExecutionId}: ${compensationError.message}`);
@@ -566,6 +904,9 @@ export class SagaService {
           errorMessage: `Original error: ${reason}. Compensation error: ${compensationError.message}`,
         },
       });
+
+      // FIX: Use proper OrderStatus enum - CANCELLED instead of FAILED for failed saga
+      await this.orderService.updateOrderStatus(sagaExecution.orderId, OrderStatus.CANCELLED);
     }
 
     return sagaExecution;

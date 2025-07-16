@@ -5,11 +5,12 @@ import {
   HttpException,
   HttpStatus,
   Inject,
-  Headers,
+  UseGuards,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { firstValueFrom } from 'rxjs';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { GetUser } from '../auth/get-user.decorator';
 
 @ApiTags('Users')
 @Controller('users')
@@ -19,38 +20,19 @@ export class UsersController {
   ) {}
 
   @Get('profile')
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current user profile' })
   @ApiResponse({ status: 200, description: 'Profile retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getProfile(@Headers('authorization') authorization?: string) {
+  async getProfile(@GetUser() user: any) {
     try {
-      if (!authorization) {
-        throw new HttpException('Authorization header required', HttpStatus.UNAUTHORIZED);
-      }
-
-      // Forward token to User Service for validation
-      const result = await firstValueFrom(
-        this.userServiceClient.send('user.get-profile', { 
-          authorization 
-        }),
-      );
-
-      if (!result.success) {
-        throw new HttpException(
-          result.error || 'Unauthorized',
-          HttpStatus.UNAUTHORIZED,
-        );
-      }
-
+      // No need for manual auth validation - user is already validated by the guard
       return {
         message: 'Profile retrieved successfully',
-        user: result.data,
+        user: user,
       };
     } catch (error) {
-      if (error instanceof HttpException) {
-        throw error;
-      }
       throw new HttpException(
         'Internal server error',
         HttpStatus.INTERNAL_SERVER_ERROR,
