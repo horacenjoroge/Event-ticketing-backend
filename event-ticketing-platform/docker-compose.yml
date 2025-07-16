@@ -283,35 +283,48 @@ services:
     networks:
       - microservices
 
-  # Payment Service - COMMENTED OUT (missing Dockerfile)
-  # payment-service:
-  #   build:
-  #     context: .
-  #     dockerfile: apps/payment-service/Dockerfile
-  #   container_name: payment-service
-  #   env_file: .env
-  #   environment:
-  #     - NODE_ENV=${NODE_ENV:-development}
-  #     - PAYMENT_DATABASE_URL=${PAYMENT_DATABASE_URL}
-  #     - RABBITMQ_URL=${RABBITMQ_URL}
-  #     - REDIS_URL=${REDIS_URL}
-  #     - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
-  #     - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
-  #     - PAYMENT_TIMEOUT_SECONDS=${PAYMENT_TIMEOUT_SECONDS:-30}
-  #     - SUPPORTED_CURRENCIES=${SUPPORTED_CURRENCIES}
-  #   depends_on:
-  #     postgres-payment:
-  #       condition: service_healthy
-  #     rabbitmq:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
-  #   volumes:
-  #     - ./apps/payment-service:/usr/src/app/apps/payment-service
-  #     - ./libs:/usr/src/app/libs
-  #     - /usr/src/app/node_modules
-  #   networks:
-  #     - microservices
+  # Payment Service - NOW ENABLED
+  payment-service:
+    build:
+      context: .
+      dockerfile: apps/payment-service/Dockerfile
+    container_name: payment-service
+    env_file: .env
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - DATABASE_URL=${PAYMENT_DATABASE_URL}
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      - REDIS_URL=${REDIS_URL}
+      # Stripe Configuration
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+      # M-Pesa Configuration
+      - MPESA_BASE_URL=${MPESA_BASE_URL}
+      - MPESA_CONSUMER_KEY=${MPESA_CONSUMER_KEY}
+      - MPESA_CONSUMER_SECRET=${MPESA_CONSUMER_SECRET}
+      - MPESA_SHORTCODE=${MPESA_SHORTCODE}
+      - MPESA_PASSKEY=${MPESA_PASSKEY}
+      - MPESA_INITIATOR_NAME=${MPESA_INITIATOR_NAME}
+      - MPESA_SECURITY_CREDENTIAL=${MPESA_SECURITY_CREDENTIAL}
+      - MPESA_CALLBACK_URL=${MPESA_CALLBACK_URL}
+      # Payment Settings
+      - PAYMENT_TIMEOUT_SECONDS=${PAYMENT_TIMEOUT_SECONDS:-30}
+      - SUPPORTED_CURRENCIES=${SUPPORTED_CURRENCIES}
+      - PLATFORM_FEE_PERCENTAGE=${PLATFORM_FEE_PERCENTAGE:-2.5}
+    depends_on:
+      postgres-payment:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./apps/payment-service:/usr/src/app/apps/payment-service
+      - ./libs:/usr/src/app/libs
+      - /usr/src/app/node_modules
+    networks:
+      - microservices
 
   # Notification Service - COMMENTED OUT (missing Dockerfile)
   # notification-service:
@@ -375,8 +388,8 @@ services:
         condition: service_started
       order-service:
         condition: service_started
-      # payment-service:
-      #   condition: service_started
+      payment-service:
+        condition: service_started
       # notification-service:
       #   condition: service_started
     volumes:

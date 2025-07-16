@@ -7,7 +7,7 @@ import { EventsModule } from './events/events.module';
 import { TicketsModule } from './tickets/tickets.module';
 import { OrdersModule } from './orders/orders.module';
 import { TestModule } from './test/test.module'; // ✅ Import TestModule
-// import { PaymentsModule } from './payments/payments.module';   // ← Comment out
+ import { PaymentsModule } from './payments/payments.module';   
 // import { NotificationsModule } from './notifications/notifications.module'; // ← Comment out
 import { MicroserviceClientModule } from './common/microservice-client.module';
 
@@ -24,7 +24,7 @@ import { MicroserviceClientModule } from './common/microservice-client.module';
     TicketsModule,
     OrdersModule,
     TestModule, // ✅ Add TestModule here
-    // PaymentsModule,            // ← Comment out
+    PaymentsModule,            
     // NotificationsModule,       // ← Comment out
   ],
 })
