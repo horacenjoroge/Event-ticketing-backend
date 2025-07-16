@@ -1,0 +1,157 @@
+// prisma/schema.prisma
+generator client {
+  provider      = "prisma-client-js"
+  output        = "./generated/prisma"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("PAYMENT_DATABASE_URL") // Using PAYMENT_DATABASE_URL as per env file
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+  REFUNDED
+  PARTIALLY_REFUNDED
+  DISPUTED
+  EXPIRED
+}
+
+enum PaymentProvider {
+  STRIPE
+  MPESA
+  PAYPAL
+  BANK_TRANSFER
+}
+
+enum PaymentMethod {
+  CARD
+  MOBILE_MONEY
+  BANK_TRANSFER
+  DIGITAL_WALLET
+  CRYPTO
+}
+
+enum Currency {
+  USD
+  EUR
+  GBP
+  KES
+  NGN
+  GHS
+  UGX
+  TZS
+}
+
+enum RefundStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+model Payment {
+  id                      String          @id @default(cuid())
+  orderId                 String          @unique
+  amount                  Decimal         @db.Decimal(10, 2)
+  currency                Currency
+  status                  PaymentStatus   @default(PENDING)
+  provider                PaymentProvider
+  paymentMethod           PaymentMethod
+  providerTransactionId   String?
+  providerPaymentMethodId String?
+
+  // Customer information
+  customerEmail String
+  customerPhone String?
+  customerId    String?
+
+  // Payment flow URLs and data
+  redirectUrl  String?
+  returnUrl    String?
+  qrCode       String?
+  instructions String?
+
+  // Metadata and tracking
+  description    String?
+  metadata       Json?
+  idempotencyKey String? @unique
+
+  // Timestamps and expiry
+  expiresAt   DateTime?
+  completedAt DateTime?
+  failedAt    DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relationships
+  refunds       Refund[]
+  paymentEvents PaymentEvent[]
+
+  @@map("payments")
+}
+
+model Refund {
+  id               String          @id @default(cuid())
+  paymentId        String
+  amount           Decimal         @db.Decimal(10, 2)
+  currency         Currency
+  status           PaymentStatus   @default(PENDING)
+  provider         PaymentProvider
+  providerRefundId String?
+  reason           String?
+  metadata         Json?
+
+  // Timestamps
+  processedAt DateTime?
+  completedAt DateTime?
+  failedAt    DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relationships
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@map("refunds")
+}
+
+model PaymentEvent {
+  id          String          @id @default(cuid())
+  paymentId   String
+  provider    PaymentProvider
+  eventType   String
+  eventData   Json
+  processedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  // Relationships
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@map("payment_events")
+}
+
+model WebhookLog {
+  id           String          @id @default(cuid())
+  provider     PaymentProvider
+  eventId      String
+  eventType    String
+  payload      Json
+  signature    String?
+  processed    Boolean         @default(false)
+  processedAt  DateTime?
+  errorMessage String?
+  retryCount   Int             @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([provider, eventId])
+  @@map("webhook_logs")
+}
