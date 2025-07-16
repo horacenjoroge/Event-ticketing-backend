@@ -1,0 +1,12 @@
+// src/enums/payment-status.enum.ts
+export enum PaymentStatus {
+    PENDING = 'PENDING',
+    PROCESSING = 'PROCESSING',
+    COMPLETED = 'COMPLETED',
+    FAILED = 'FAILED',
+    CANCELLED = 'CANCELLED',
+    REFUNDED = 'REFUNDED',
+    PARTIALLY_REFUNDED = 'PARTIALLY_REFUNDED',
+    DISPUTED = 'DISPUTED',
+    EXPIRED = 'EXPIRED'
+  }
