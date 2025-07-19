@@ -23,7 +23,7 @@ async function bootstrap() {
         // Prefetch count for better load balancing
         prefetchCount: 10,
         // Enable message acknowledgment
-        noAck: false,
+        noAck: true,
       },
     },
   );
