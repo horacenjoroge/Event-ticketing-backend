@@ -185,7 +185,7 @@ export class MpesaProvider implements IPaymentProvider {
     // Handle M-Pesa webhook events
   }
 
-  // Enhanced authorization method - similar to your example
+  // FIXED: Enhanced authorization method with proper null handling
   private async getAccessToken(): Promise<string> {
     if (this.accessToken && this.tokenExpiresAt && this.tokenExpiresAt > new Date()) {
       this.logger.debug('♻️ Using cached M-Pesa access token');
@@ -229,6 +229,11 @@ export class MpesaProvider implements IPaymentProvider {
 
       this.logger.log(`✅ M-Pesa access token obtained successfully`);
       this.logger.debug(`⏰ Token expires at: ${this.tokenExpiresAt.toISOString()}`);
+      
+      // FIX: Add proper null check before returning
+      if (!this.accessToken) {
+        throw new Error('Failed to set access token');
+      }
       
       return this.accessToken;
     } catch (error) {
