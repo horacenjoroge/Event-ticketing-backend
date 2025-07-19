@@ -254,7 +254,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "/Users/la/Desktop/Repository/horacenjoroge/Event ticketing backend/event-ticketing-platform/apps/payment-service/prisma/generated/prisma",
+      "value": "/usr/src/app/apps/payment-service/prisma/generated/prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -263,7 +263,7 @@ const config = {
     "binaryTargets": [
       {
         "fromEnvVar": null,
-        "value": "darwin",
+        "value": "linux-musl-openssl-3.0.x",
         "native": true
       },
       {
@@ -272,11 +272,11 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "/Users/la/Desktop/Repository/horacenjoroge/Event ticketing backend/event-ticketing-platform/apps/payment-service/prisma/schema.prisma",
+    "sourceFilePath": "/usr/src/app/apps/payment-service/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
-    "rootEnvPath": "../../../../../.env"
+    "rootEnvPath": null
   },
   "relativePath": "../..",
   "clientVersion": "6.10.1",
@@ -285,7 +285,6 @@ const config = {
     "db"
   ],
   "activeProvider": "postgresql",
-  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
@@ -332,10 +331,6 @@ warnEnvConflicts({
 const PrismaClient = getPrismaClient(config)
 exports.PrismaClient = PrismaClient
 Object.assign(exports, Prisma)
-
-// file annotations for bundling tools to include these files
-path.join(__dirname, "libquery_engine-darwin.dylib.node");
-path.join(process.cwd(), "prisma/generated/prisma/libquery_engine-darwin.dylib.node")
 
 // file annotations for bundling tools to include these files
 path.join(__dirname, "libquery_engine-linux-musl-openssl-3.0.x.so.node");
