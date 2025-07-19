@@ -94,8 +94,8 @@ export class PaymentService {
         },
       });
 
-      // Log payment event
-      await this.createPaymentEvent(payment.id, 'payment.initiated', providerResponse);
+      // FIXED: Log payment event with correct provider
+      await this.createPaymentEvent(payment.id, 'payment.initiated', providerResponse, provider.provider);
 
       return this.mapPaymentToDto(updatedPayment);
     } catch (error) {
@@ -463,11 +463,17 @@ export class PaymentService {
     });
   }
 
-  private async createPaymentEvent(paymentId: string, eventType: string, eventData: any): Promise<void> {
+  // FIXED: Updated createPaymentEvent method to accept provider parameter
+  private async createPaymentEvent(
+    paymentId: string, 
+    eventType: string, 
+    eventData: any, 
+    provider?: PaymentProvider
+  ): Promise<void> {
     await this.prisma.paymentEvent.create({
       data: {
         paymentId,
-        provider: eventData.provider || PaymentProvider.STRIPE,
+        provider: provider || eventData.provider || PaymentProvider.STRIPE,
         eventType,
         eventData,
         processedAt: new Date(),
