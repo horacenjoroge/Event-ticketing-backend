@@ -57,7 +57,8 @@ export const PaymentProvider: {
   STRIPE: 'STRIPE',
   MPESA: 'MPESA',
   PAYPAL: 'PAYPAL',
-  BANK_TRANSFER: 'BANK_TRANSFER'
+  BANK_TRANSFER: 'BANK_TRANSFER',
+  FLUTTERWAVE: 'FLUTTERWAVE'
 };
 
 export type PaymentProvider = (typeof PaymentProvider)[keyof typeof PaymentProvider]

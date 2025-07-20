@@ -27,6 +27,7 @@ enum PaymentProvider {
   MPESA
   PAYPAL
   BANK_TRANSFER
+  FLUTTERWAVE
 }
 
 enum PaymentMethod {

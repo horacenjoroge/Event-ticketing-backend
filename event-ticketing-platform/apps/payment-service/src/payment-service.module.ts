@@ -13,6 +13,7 @@ import { PaymentProviderService } from './services/payment-provider.service';
 // Providers
 import { StripeProvider } from './providers/stripe.provider';
 import { MpesaProvider } from './providers/mpesa.provider';
+import { FlutterwaveProvider } from './providers/flutterwave.provider'; // ← ADD THIS IMPORT
 
 // Database
 import { PrismaService } from './database/prisma.service';
@@ -62,6 +63,7 @@ import { PrismaService } from './database/prisma.service';
     // Payment providers
     StripeProvider,
     MpesaProvider,
+    FlutterwaveProvider, // ← ADD THIS PROVIDER
   ],
   exports: [
     PaymentService,

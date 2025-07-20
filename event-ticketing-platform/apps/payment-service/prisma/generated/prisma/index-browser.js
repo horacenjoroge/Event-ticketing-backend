@@ -245,7 +245,8 @@ exports.PaymentProvider = exports.$Enums.PaymentProvider = {
   STRIPE: 'STRIPE',
   MPESA: 'MPESA',
   PAYPAL: 'PAYPAL',
-  BANK_TRANSFER: 'BANK_TRANSFER'
+  BANK_TRANSFER: 'BANK_TRANSFER',
+  FLUTTERWAVE: 'FLUTTERWAVE'
 };
 
 exports.PaymentMethod = exports.$Enums.PaymentMethod = {
