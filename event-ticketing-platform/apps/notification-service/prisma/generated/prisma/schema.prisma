@@ -1,0 +1,185 @@
+// apps/notification-service/prisma/schema.prisma
+generator client {
+  provider      = "prisma-client-js"
+  output        = "./generated/prisma"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("NOTIFICATION_DATABASE_URL")
+}
+
+enum NotificationStatus {
+  PENDING
+  PROCESSING
+  SENT
+  FAILED
+  DELIVERED
+  BOUNCED
+  CLICKED
+  OPENED
+}
+
+enum NotificationType {
+  EMAIL
+  SMS
+  PUSH
+  WEBHOOK
+}
+
+enum NotificationPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum TemplateType {
+  EMAIL
+  SMS
+  PUSH
+}
+
+model Notification {
+  id       String               @id @default(cuid())
+  type     NotificationType
+  status   NotificationStatus   @default(PENDING)
+  priority NotificationPriority @default(NORMAL)
+
+  // Recipients
+  recipient     String // Email address or phone number
+  recipientName String?
+  recipientId   String? // User ID if available
+
+  // Content
+  subject      String? // For emails
+  message      String // Email body or SMS message
+  templateId   String?
+  templateData Json? // Dynamic data for templates
+
+  // Provider info
+  provider          String // BREVO, TWILIO, etc.
+  providerMessageId String? // ID from provider
+  providerResponse  Json? // Full provider response
+
+  // Metadata
+  eventType String? // payment_confirmation, ticket_delivery, etc.
+  orderId   String? // Link to order
+  paymentId String? // Link to payment
+  eventId   String? // Link to event
+  metadata  Json? // Additional data
+
+  // Tracking
+  sentAt       DateTime?
+  deliveredAt  DateTime?
+  openedAt     DateTime?
+  clickedAt    DateTime?
+  bouncedAt    DateTime?
+  failedAt     DateTime?
+  errorMessage String?
+  retryCount   Int       @default(0)
+  maxRetries   Int       @default(3)
+
+  // Timestamps
+  scheduledFor DateTime? // For delayed notifications
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relationships
+  template   NotificationTemplate? @relation(fields: [templateId], references: [id])
+  events     NotificationEvent[] // ← ADDED: One notification can have many events
+  queueItems NotificationQueue[] // ← ADDED: One notification can have many queue items
+
+  @@map("notifications")
+}
+
+model NotificationTemplate {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  type        TemplateType
+  description String?
+
+  // Template content
+  subject     String? // For emails
+  htmlContent String? // HTML email content
+  textContent String // Plain text content/SMS message
+  variables   Json? // Available template variables
+
+  // Brevo specific
+  brevoTemplateId Int? // Brevo template ID if using their templates
+
+  // Metadata
+  isActive  Boolean @default(true)
+  createdBy String?
+  version   Int     @default(1)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  notifications Notification[]
+
+  @@map("notification_templates")
+}
+
+model NotificationQueue {
+  id                  String               @id @default(cuid())
+  queueName           String
+  notificationId      String
+  priority            NotificationPriority @default(NORMAL)
+  attempts            Int                  @default(0)
+  maxAttempts         Int                  @default(3)
+  status              String               @default("pending") // pending, processing, completed, failed
+  processingStartedAt DateTime?
+  completedAt         DateTime?
+  failedAt            DateTime?
+  errorMessage        String?
+  nextRetryAt         DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  notification Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+
+  @@map("notification_queue")
+}
+
+model NotificationEvent {
+  id              String  @id @default(cuid())
+  notificationId  String
+  eventType       String // sent, delivered, opened, clicked, bounced
+  eventData       Json?
+  providerEventId String?
+
+  createdAt DateTime @default(now())
+
+  // Relationships
+  notification Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+
+  @@map("notification_events")
+}
+
+model NotificationSettings {
+  id        String  @id @default(cuid())
+  userId    String? // User-specific settings
+  eventType String // payment_confirmation, ticket_delivery, etc.
+
+  // Channel preferences
+  emailEnabled Boolean @default(true)
+  smsEnabled   Boolean @default(true)
+  pushEnabled  Boolean @default(true)
+
+  // Timing preferences
+  immediateNotify Boolean @default(true)
+  reminderEnabled Boolean @default(true)
+  reminderTime    Int? // Hours before event
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, eventType])
+  @@map("notification_settings")
+}
