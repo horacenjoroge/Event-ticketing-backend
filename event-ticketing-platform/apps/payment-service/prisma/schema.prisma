@@ -1,4 +1,7 @@
-// prisma/schema.prisma
+// =====================================================
+// apps/payment-service/prisma/schema.prisma
+// Updated with missing fields that were causing build errors
+// =====================================================
 generator client {
   provider      = "prisma-client-js"
   output        = "./generated/prisma"
@@ -63,14 +66,16 @@ model Payment {
   amount                  Decimal           @db.Decimal(10, 2)
   currency                Currency
   status                  PaymentStatus     @default(PENDING)
-  provider                PaymentProvider
+  provider                PaymentProvider?  // Made optional to fix "missing required field" error
   paymentMethod           PaymentMethod
   providerTransactionId   String?
   providerPaymentMethodId String?
+  providerResponse        Json?             // Added missing field for storing provider responses
   
   // Customer information
   customerEmail           String
   customerPhone           String?
+  customerName            String?           // Added missing field
   customerId              String?
   
   // Payment flow URLs and data
@@ -83,6 +88,7 @@ model Payment {
   description             String?
   metadata                Json?
   idempotencyKey          String?           @unique
+  errorMessage            String?           // Added missing field for error handling
   
   // Timestamps and expiry
   expiresAt               DateTime?
@@ -106,8 +112,11 @@ model Refund {
   status                PaymentStatus     @default(PENDING)
   provider              PaymentProvider
   providerRefundId      String?
+  providerResponse      Json?             // Added missing field for storing provider responses
   reason                String?
   metadata              Json?
+  idempotencyKey        String?           @unique  // Added missing field
+  errorMessage          String?           // Added missing field
   
   // Timestamps
   processedAt           DateTime?
