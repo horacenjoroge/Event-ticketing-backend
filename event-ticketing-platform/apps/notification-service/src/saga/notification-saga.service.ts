@@ -5,8 +5,8 @@
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { PrismaService } from '../database/prisma.service';
-import { EmailService } from '../email/email.service';
-import { SmsService } from '../sms/sms.service';
+import { EmailService } from '../providers/email.service';
+import { SmsService } from '../providers/sms.service';
 
 @Injectable()
 export class NotificationSagaService {
