@@ -107,9 +107,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
                 'amqp://admin:admin123@localhost:5672',
             ],
             queue: 'notification_queue',
-            queueOptions: {
-              durable: false,
-            },
+            // ← Removed queueOptions - let notification service create the queue
           },
         }),
         inject: [ConfigService],

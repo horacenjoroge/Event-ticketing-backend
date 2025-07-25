@@ -1,6 +1,6 @@
-// src/payment-service.module.ts
+// apps/payment-service/src/payment-service.module.ts
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 
 // Controllers
@@ -13,7 +13,7 @@ import { PaymentProviderService } from './services/payment-provider.service';
 // Providers
 import { StripeProvider } from './providers/stripe.provider';
 import { MpesaProvider } from './providers/mpesa.provider';
-import { FlutterwaveProvider } from './providers/flutterwave.provider'; // ← ADD THIS IMPORT
+import { FlutterwaveProvider } from './providers/flutterwave.provider';
 
 // Database
 import { PrismaService } from './database/prisma.service';
@@ -26,28 +26,40 @@ import { PrismaService } from './database/prisma.service';
     }),
     
     // RabbitMQ clients for communicating with other services
-    ClientsModule.register([
+    ClientsModule.registerAsync([
       {
         name: 'ORDER_SERVICE',
-        transport: Transport.RMQ,
-        options: {
-          urls: [process.env.RABBITMQ_URL || 'amqp://admin:admin123@rabbitmq:5672'],
-          queue: 'order_queue',
-          queueOptions: {
-            durable: false,
+        imports: [ConfigModule],
+        useFactory: async (configService: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [
+              configService.get<string>('RABBITMQ_URL') ||
+                'amqp://admin:admin123@rabbitmq:5672',
+            ],
+            queue: 'order_queue',
+            queueOptions: {
+              durable: false,
+            },
           },
-        },
+        }),
+        inject: [ConfigService],
       },
       {
         name: 'NOTIFICATION_SERVICE',
-        transport: Transport.RMQ,
-        options: {
-          urls: [process.env.RABBITMQ_URL || 'amqp://admin:admin123@rabbitmq:5672'],
-          queue: 'notification_queue',
-          queueOptions: {
-            durable: false,
+        imports: [ConfigModule],
+        useFactory: async (configService: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [
+              configService.get<string>('RABBITMQ_URL') ||
+                'amqp://admin:admin123@rabbitmq:5672',
+            ],
+            queue: 'notification_queue',
+            // ← Removed queueOptions - let notification service create the queue
           },
-        },
+        }),
+        inject: [ConfigService],
       },
     ]),
   ],
@@ -63,7 +75,7 @@ import { PrismaService } from './database/prisma.service';
     // Payment providers
     StripeProvider,
     MpesaProvider,
-    FlutterwaveProvider, // ← ADD THIS PROVIDER
+    FlutterwaveProvider,
   ],
   exports: [
     PaymentService,
