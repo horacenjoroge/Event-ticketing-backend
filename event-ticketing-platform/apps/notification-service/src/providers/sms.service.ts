@@ -1,9 +1,9 @@
 // =====================================================
-// apps/notification-service/src/sms/sms.service.ts (Updated)
+// apps/notification-service/src/sms/sms.service.ts
 // =====================================================
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
-import { SmsProvider } from '../sms/sms';
+import { SmsProvider } from '../sms/sms'; // ← Fixed import path
 
 @Injectable()
 export class SmsService {
