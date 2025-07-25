@@ -1,2 +1,2 @@
 
-export * from './brevo.provider';
+export * from '../providers/brevo.provider';
