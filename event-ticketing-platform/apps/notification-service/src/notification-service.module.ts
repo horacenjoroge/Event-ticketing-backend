@@ -1,6 +1,5 @@
 // =====================================================
 // apps/notification-service/src/notification-service.module.ts
-// REMOVED duplicate NotificationServiceService
 // =====================================================
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
@@ -16,8 +15,11 @@ import { NotificationSagaService } from './saga/notification-saga.service';
 
 // Provider services
 import { EmailService } from './providers/email.service';
-import { SmsService } from './providers/sms.service';
+import { SmsService } from './providers/sms.service';      // ← Keep this (existing file)
 import { TemplateService } from './providers/template.service';
+
+// SMS Provider (from sms folder)
+import { SmsProvider } from './sms/sms';                  // ← ADD THIS LINE
 
 // External providers
 import { BrevoProvider } from './providers/brevo.provider';
@@ -51,14 +53,17 @@ import { PrismaService } from './database/prisma.service';
     NotificationSagaController,
   ],
   providers: [
-    // ONLY use the core service (remove duplicate NotificationServiceService)
+    // Core services
     NotificationService,
     NotificationSagaService,
     
     // Provider services
     EmailService,
-    SmsService,
+    SmsService,        // ← Keep this (from providers folder)
     TemplateService,
+    
+    // SMS Provider
+    SmsProvider,       // ← ADD THIS LINE
     
     // Database
     PrismaService,
@@ -69,6 +74,7 @@ import { PrismaService } from './database/prisma.service';
   exports: [
     NotificationService,
     EmailService,
+    SmsService,
     PrismaService,
   ],
 })
