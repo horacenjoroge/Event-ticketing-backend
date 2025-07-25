@@ -1300,6 +1300,7 @@ export namespace Prisma {
     providerPaymentMethodId: string | null
     customerEmail: string | null
     customerPhone: string | null
+    customerName: string | null
     customerId: string | null
     redirectUrl: string | null
     returnUrl: string | null
@@ -1307,6 +1308,7 @@ export namespace Prisma {
     instructions: string | null
     description: string | null
     idempotencyKey: string | null
+    errorMessage: string | null
     expiresAt: Date | null
     completedAt: Date | null
     failedAt: Date | null
@@ -1326,6 +1328,7 @@ export namespace Prisma {
     providerPaymentMethodId: string | null
     customerEmail: string | null
     customerPhone: string | null
+    customerName: string | null
     customerId: string | null
     redirectUrl: string | null
     returnUrl: string | null
@@ -1333,6 +1336,7 @@ export namespace Prisma {
     instructions: string | null
     description: string | null
     idempotencyKey: string | null
+    errorMessage: string | null
     expiresAt: Date | null
     completedAt: Date | null
     failedAt: Date | null
@@ -1350,8 +1354,10 @@ export namespace Prisma {
     paymentMethod: number
     providerTransactionId: number
     providerPaymentMethodId: number
+    providerResponse: number
     customerEmail: number
     customerPhone: number
+    customerName: number
     customerId: number
     redirectUrl: number
     returnUrl: number
@@ -1360,6 +1366,7 @@ export namespace Prisma {
     description: number
     metadata: number
     idempotencyKey: number
+    errorMessage: number
     expiresAt: number
     completedAt: number
     failedAt: number
@@ -1389,6 +1396,7 @@ export namespace Prisma {
     providerPaymentMethodId?: true
     customerEmail?: true
     customerPhone?: true
+    customerName?: true
     customerId?: true
     redirectUrl?: true
     returnUrl?: true
@@ -1396,6 +1404,7 @@ export namespace Prisma {
     instructions?: true
     description?: true
     idempotencyKey?: true
+    errorMessage?: true
     expiresAt?: true
     completedAt?: true
     failedAt?: true
@@ -1415,6 +1424,7 @@ export namespace Prisma {
     providerPaymentMethodId?: true
     customerEmail?: true
     customerPhone?: true
+    customerName?: true
     customerId?: true
     redirectUrl?: true
     returnUrl?: true
@@ -1422,6 +1432,7 @@ export namespace Prisma {
     instructions?: true
     description?: true
     idempotencyKey?: true
+    errorMessage?: true
     expiresAt?: true
     completedAt?: true
     failedAt?: true
@@ -1439,8 +1450,10 @@ export namespace Prisma {
     paymentMethod?: true
     providerTransactionId?: true
     providerPaymentMethodId?: true
+    providerResponse?: true
     customerEmail?: true
     customerPhone?: true
+    customerName?: true
     customerId?: true
     redirectUrl?: true
     returnUrl?: true
@@ -1449,6 +1462,7 @@ export namespace Prisma {
     description?: true
     metadata?: true
     idempotencyKey?: true
+    errorMessage?: true
     expiresAt?: true
     completedAt?: true
     failedAt?: true
@@ -1549,12 +1563,14 @@ export namespace Prisma {
     amount: Decimal
     currency: $Enums.Currency
     status: $Enums.PaymentStatus
-    provider: $Enums.PaymentProvider
+    provider: $Enums.PaymentProvider | null
     paymentMethod: $Enums.PaymentMethod
     providerTransactionId: string | null
     providerPaymentMethodId: string | null
+    providerResponse: JsonValue | null
     customerEmail: string
     customerPhone: string | null
+    customerName: string | null
     customerId: string | null
     redirectUrl: string | null
     returnUrl: string | null
@@ -1563,6 +1579,7 @@ export namespace Prisma {
     description: string | null
     metadata: JsonValue | null
     idempotencyKey: string | null
+    errorMessage: string | null
     expiresAt: Date | null
     completedAt: Date | null
     failedAt: Date | null
@@ -1599,8 +1616,10 @@ export namespace Prisma {
     paymentMethod?: boolean
     providerTransactionId?: boolean
     providerPaymentMethodId?: boolean
+    providerResponse?: boolean
     customerEmail?: boolean
     customerPhone?: boolean
+    customerName?: boolean
     customerId?: boolean
     redirectUrl?: boolean
     returnUrl?: boolean
@@ -1609,6 +1628,7 @@ export namespace Prisma {
     description?: boolean
     metadata?: boolean
     idempotencyKey?: boolean
+    errorMessage?: boolean
     expiresAt?: boolean
     completedAt?: boolean
     failedAt?: boolean
@@ -1629,8 +1649,10 @@ export namespace Prisma {
     paymentMethod?: boolean
     providerTransactionId?: boolean
     providerPaymentMethodId?: boolean
+    providerResponse?: boolean
     customerEmail?: boolean
     customerPhone?: boolean
+    customerName?: boolean
     customerId?: boolean
     redirectUrl?: boolean
     returnUrl?: boolean
@@ -1639,6 +1661,7 @@ export namespace Prisma {
     description?: boolean
     metadata?: boolean
     idempotencyKey?: boolean
+    errorMessage?: boolean
     expiresAt?: boolean
     completedAt?: boolean
     failedAt?: boolean
@@ -1656,8 +1679,10 @@ export namespace Prisma {
     paymentMethod?: boolean
     providerTransactionId?: boolean
     providerPaymentMethodId?: boolean
+    providerResponse?: boolean
     customerEmail?: boolean
     customerPhone?: boolean
+    customerName?: boolean
     customerId?: boolean
     redirectUrl?: boolean
     returnUrl?: boolean
@@ -1666,6 +1691,7 @@ export namespace Prisma {
     description?: boolean
     metadata?: boolean
     idempotencyKey?: boolean
+    errorMessage?: boolean
     expiresAt?: boolean
     completedAt?: boolean
     failedAt?: boolean
@@ -1683,8 +1709,10 @@ export namespace Prisma {
     paymentMethod?: boolean
     providerTransactionId?: boolean
     providerPaymentMethodId?: boolean
+    providerResponse?: boolean
     customerEmail?: boolean
     customerPhone?: boolean
+    customerName?: boolean
     customerId?: boolean
     redirectUrl?: boolean
     returnUrl?: boolean
@@ -1693,6 +1721,7 @@ export namespace Prisma {
     description?: boolean
     metadata?: boolean
     idempotencyKey?: boolean
+    errorMessage?: boolean
     expiresAt?: boolean
     completedAt?: boolean
     failedAt?: boolean
@@ -1700,7 +1729,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type PaymentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "orderId" | "amount" | "currency" | "status" | "provider" | "paymentMethod" | "providerTransactionId" | "providerPaymentMethodId" | "customerEmail" | "customerPhone" | "customerId" | "redirectUrl" | "returnUrl" | "qrCode" | "instructions" | "description" | "metadata" | "idempotencyKey" | "expiresAt" | "completedAt" | "failedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["payment"]>
+  export type PaymentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "orderId" | "amount" | "currency" | "status" | "provider" | "paymentMethod" | "providerTransactionId" | "providerPaymentMethodId" | "providerResponse" | "customerEmail" | "customerPhone" | "customerName" | "customerId" | "redirectUrl" | "returnUrl" | "qrCode" | "instructions" | "description" | "metadata" | "idempotencyKey" | "errorMessage" | "expiresAt" | "completedAt" | "failedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["payment"]>
   export type PaymentInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     refunds?: boolean | Payment$refundsArgs<ExtArgs>
     paymentEvents?: boolean | Payment$paymentEventsArgs<ExtArgs>
@@ -1721,12 +1750,14 @@ export namespace Prisma {
       amount: Prisma.Decimal
       currency: $Enums.Currency
       status: $Enums.PaymentStatus
-      provider: $Enums.PaymentProvider
+      provider: $Enums.PaymentProvider | null
       paymentMethod: $Enums.PaymentMethod
       providerTransactionId: string | null
       providerPaymentMethodId: string | null
+      providerResponse: Prisma.JsonValue | null
       customerEmail: string
       customerPhone: string | null
+      customerName: string | null
       customerId: string | null
       redirectUrl: string | null
       returnUrl: string | null
@@ -1735,6 +1766,7 @@ export namespace Prisma {
       description: string | null
       metadata: Prisma.JsonValue | null
       idempotencyKey: string | null
+      errorMessage: string | null
       expiresAt: Date | null
       completedAt: Date | null
       failedAt: Date | null
@@ -2174,8 +2206,10 @@ export namespace Prisma {
     readonly paymentMethod: FieldRef<"Payment", 'PaymentMethod'>
     readonly providerTransactionId: FieldRef<"Payment", 'String'>
     readonly providerPaymentMethodId: FieldRef<"Payment", 'String'>
+    readonly providerResponse: FieldRef<"Payment", 'Json'>
     readonly customerEmail: FieldRef<"Payment", 'String'>
     readonly customerPhone: FieldRef<"Payment", 'String'>
+    readonly customerName: FieldRef<"Payment", 'String'>
     readonly customerId: FieldRef<"Payment", 'String'>
     readonly redirectUrl: FieldRef<"Payment", 'String'>
     readonly returnUrl: FieldRef<"Payment", 'String'>
@@ -2184,6 +2218,7 @@ export namespace Prisma {
     readonly description: FieldRef<"Payment", 'String'>
     readonly metadata: FieldRef<"Payment", 'Json'>
     readonly idempotencyKey: FieldRef<"Payment", 'String'>
+    readonly errorMessage: FieldRef<"Payment", 'String'>
     readonly expiresAt: FieldRef<"Payment", 'DateTime'>
     readonly completedAt: FieldRef<"Payment", 'DateTime'>
     readonly failedAt: FieldRef<"Payment", 'DateTime'>
@@ -2672,6 +2707,8 @@ export namespace Prisma {
     provider: $Enums.PaymentProvider | null
     providerRefundId: string | null
     reason: string | null
+    idempotencyKey: string | null
+    errorMessage: string | null
     processedAt: Date | null
     completedAt: Date | null
     failedAt: Date | null
@@ -2688,6 +2725,8 @@ export namespace Prisma {
     provider: $Enums.PaymentProvider | null
     providerRefundId: string | null
     reason: string | null
+    idempotencyKey: string | null
+    errorMessage: string | null
     processedAt: Date | null
     completedAt: Date | null
     failedAt: Date | null
@@ -2703,8 +2742,11 @@ export namespace Prisma {
     status: number
     provider: number
     providerRefundId: number
+    providerResponse: number
     reason: number
     metadata: number
+    idempotencyKey: number
+    errorMessage: number
     processedAt: number
     completedAt: number
     failedAt: number
@@ -2731,6 +2773,8 @@ export namespace Prisma {
     provider?: true
     providerRefundId?: true
     reason?: true
+    idempotencyKey?: true
+    errorMessage?: true
     processedAt?: true
     completedAt?: true
     failedAt?: true
@@ -2747,6 +2791,8 @@ export namespace Prisma {
     provider?: true
     providerRefundId?: true
     reason?: true
+    idempotencyKey?: true
+    errorMessage?: true
     processedAt?: true
     completedAt?: true
     failedAt?: true
@@ -2762,8 +2808,11 @@ export namespace Prisma {
     status?: true
     provider?: true
     providerRefundId?: true
+    providerResponse?: true
     reason?: true
     metadata?: true
+    idempotencyKey?: true
+    errorMessage?: true
     processedAt?: true
     completedAt?: true
     failedAt?: true
@@ -2866,8 +2915,11 @@ export namespace Prisma {
     status: $Enums.PaymentStatus
     provider: $Enums.PaymentProvider
     providerRefundId: string | null
+    providerResponse: JsonValue | null
     reason: string | null
     metadata: JsonValue | null
+    idempotencyKey: string | null
+    errorMessage: string | null
     processedAt: Date | null
     completedAt: Date | null
     failedAt: Date | null
@@ -2902,8 +2954,11 @@ export namespace Prisma {
     status?: boolean
     provider?: boolean
     providerRefundId?: boolean
+    providerResponse?: boolean
     reason?: boolean
     metadata?: boolean
+    idempotencyKey?: boolean
+    errorMessage?: boolean
     processedAt?: boolean
     completedAt?: boolean
     failedAt?: boolean
@@ -2920,8 +2975,11 @@ export namespace Prisma {
     status?: boolean
     provider?: boolean
     providerRefundId?: boolean
+    providerResponse?: boolean
     reason?: boolean
     metadata?: boolean
+    idempotencyKey?: boolean
+    errorMessage?: boolean
     processedAt?: boolean
     completedAt?: boolean
     failedAt?: boolean
@@ -2938,8 +2996,11 @@ export namespace Prisma {
     status?: boolean
     provider?: boolean
     providerRefundId?: boolean
+    providerResponse?: boolean
     reason?: boolean
     metadata?: boolean
+    idempotencyKey?: boolean
+    errorMessage?: boolean
     processedAt?: boolean
     completedAt?: boolean
     failedAt?: boolean
@@ -2956,8 +3017,11 @@ export namespace Prisma {
     status?: boolean
     provider?: boolean
     providerRefundId?: boolean
+    providerResponse?: boolean
     reason?: boolean
     metadata?: boolean
+    idempotencyKey?: boolean
+    errorMessage?: boolean
     processedAt?: boolean
     completedAt?: boolean
     failedAt?: boolean
@@ -2965,7 +3029,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type RefundOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "paymentId" | "amount" | "currency" | "status" | "provider" | "providerRefundId" | "reason" | "metadata" | "processedAt" | "completedAt" | "failedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["refund"]>
+  export type RefundOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "paymentId" | "amount" | "currency" | "status" | "provider" | "providerRefundId" | "providerResponse" | "reason" | "metadata" | "idempotencyKey" | "errorMessage" | "processedAt" | "completedAt" | "failedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["refund"]>
   export type RefundInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     payment?: boolean | PaymentDefaultArgs<ExtArgs>
   }
@@ -2989,8 +3053,11 @@ export namespace Prisma {
       status: $Enums.PaymentStatus
       provider: $Enums.PaymentProvider
       providerRefundId: string | null
+      providerResponse: Prisma.JsonValue | null
       reason: string | null
       metadata: Prisma.JsonValue | null
+      idempotencyKey: string | null
+      errorMessage: string | null
       processedAt: Date | null
       completedAt: Date | null
       failedAt: Date | null
@@ -3427,8 +3494,11 @@ export namespace Prisma {
     readonly status: FieldRef<"Refund", 'PaymentStatus'>
     readonly provider: FieldRef<"Refund", 'PaymentProvider'>
     readonly providerRefundId: FieldRef<"Refund", 'String'>
+    readonly providerResponse: FieldRef<"Refund", 'Json'>
     readonly reason: FieldRef<"Refund", 'String'>
     readonly metadata: FieldRef<"Refund", 'Json'>
+    readonly idempotencyKey: FieldRef<"Refund", 'String'>
+    readonly errorMessage: FieldRef<"Refund", 'String'>
     readonly processedAt: FieldRef<"Refund", 'DateTime'>
     readonly completedAt: FieldRef<"Refund", 'DateTime'>
     readonly failedAt: FieldRef<"Refund", 'DateTime'>
@@ -6068,8 +6138,10 @@ export namespace Prisma {
     paymentMethod: 'paymentMethod',
     providerTransactionId: 'providerTransactionId',
     providerPaymentMethodId: 'providerPaymentMethodId',
+    providerResponse: 'providerResponse',
     customerEmail: 'customerEmail',
     customerPhone: 'customerPhone',
+    customerName: 'customerName',
     customerId: 'customerId',
     redirectUrl: 'redirectUrl',
     returnUrl: 'returnUrl',
@@ -6078,6 +6150,7 @@ export namespace Prisma {
     description: 'description',
     metadata: 'metadata',
     idempotencyKey: 'idempotencyKey',
+    errorMessage: 'errorMessage',
     expiresAt: 'expiresAt',
     completedAt: 'completedAt',
     failedAt: 'failedAt',
@@ -6096,8 +6169,11 @@ export namespace Prisma {
     status: 'status',
     provider: 'provider',
     providerRefundId: 'providerRefundId',
+    providerResponse: 'providerResponse',
     reason: 'reason',
     metadata: 'metadata',
+    idempotencyKey: 'idempotencyKey',
+    errorMessage: 'errorMessage',
     processedAt: 'processedAt',
     completedAt: 'completedAt',
     failedAt: 'failedAt',
@@ -6351,12 +6427,14 @@ export namespace Prisma {
     amount?: DecimalFilter<"Payment"> | Decimal | DecimalJsLike | number | string
     currency?: EnumCurrencyFilter<"Payment"> | $Enums.Currency
     status?: EnumPaymentStatusFilter<"Payment"> | $Enums.PaymentStatus
-    provider?: EnumPaymentProviderFilter<"Payment"> | $Enums.PaymentProvider
+    provider?: EnumPaymentProviderNullableFilter<"Payment"> | $Enums.PaymentProvider | null
     paymentMethod?: EnumPaymentMethodFilter<"Payment"> | $Enums.PaymentMethod
     providerTransactionId?: StringNullableFilter<"Payment"> | string | null
     providerPaymentMethodId?: StringNullableFilter<"Payment"> | string | null
+    providerResponse?: JsonNullableFilter<"Payment">
     customerEmail?: StringFilter<"Payment"> | string
     customerPhone?: StringNullableFilter<"Payment"> | string | null
+    customerName?: StringNullableFilter<"Payment"> | string | null
     customerId?: StringNullableFilter<"Payment"> | string | null
     redirectUrl?: StringNullableFilter<"Payment"> | string | null
     returnUrl?: StringNullableFilter<"Payment"> | string | null
@@ -6365,6 +6443,7 @@ export namespace Prisma {
     description?: StringNullableFilter<"Payment"> | string | null
     metadata?: JsonNullableFilter<"Payment">
     idempotencyKey?: StringNullableFilter<"Payment"> | string | null
+    errorMessage?: StringNullableFilter<"Payment"> | string | null
     expiresAt?: DateTimeNullableFilter<"Payment"> | Date | string | null
     completedAt?: DateTimeNullableFilter<"Payment"> | Date | string | null
     failedAt?: DateTimeNullableFilter<"Payment"> | Date | string | null
@@ -6380,12 +6459,14 @@ export namespace Prisma {
     amount?: SortOrder
     currency?: SortOrder
     status?: SortOrder
-    provider?: SortOrder
+    provider?: SortOrderInput | SortOrder
     paymentMethod?: SortOrder
     providerTransactionId?: SortOrderInput | SortOrder
     providerPaymentMethodId?: SortOrderInput | SortOrder
+    providerResponse?: SortOrderInput | SortOrder
     customerEmail?: SortOrder
     customerPhone?: SortOrderInput | SortOrder
+    customerName?: SortOrderInput | SortOrder
     customerId?: SortOrderInput | SortOrder
     redirectUrl?: SortOrderInput | SortOrder
     returnUrl?: SortOrderInput | SortOrder
@@ -6394,6 +6475,7 @@ export namespace Prisma {
     description?: SortOrderInput | SortOrder
     metadata?: SortOrderInput | SortOrder
     idempotencyKey?: SortOrderInput | SortOrder
+    errorMessage?: SortOrderInput | SortOrder
     expiresAt?: SortOrderInput | SortOrder
     completedAt?: SortOrderInput | SortOrder
     failedAt?: SortOrderInput | SortOrder
@@ -6413,12 +6495,14 @@ export namespace Prisma {
     amount?: DecimalFilter<"Payment"> | Decimal | DecimalJsLike | number | string
     currency?: EnumCurrencyFilter<"Payment"> | $Enums.Currency
     status?: EnumPaymentStatusFilter<"Payment"> | $Enums.PaymentStatus
-    provider?: EnumPaymentProviderFilter<"Payment"> | $Enums.PaymentProvider
+    provider?: EnumPaymentProviderNullableFilter<"Payment"> | $Enums.PaymentProvider | null
     paymentMethod?: EnumPaymentMethodFilter<"Payment"> | $Enums.PaymentMethod
     providerTransactionId?: StringNullableFilter<"Payment"> | string | null
     providerPaymentMethodId?: StringNullableFilter<"Payment"> | string | null
+    providerResponse?: JsonNullableFilter<"Payment">
     customerEmail?: StringFilter<"Payment"> | string
     customerPhone?: StringNullableFilter<"Payment"> | string | null
+    customerName?: StringNullableFilter<"Payment"> | string | null
     customerId?: StringNullableFilter<"Payment"> | string | null
     redirectUrl?: StringNullableFilter<"Payment"> | string | null
     returnUrl?: StringNullableFilter<"Payment"> | string | null
@@ -6426,6 +6510,7 @@ export namespace Prisma {
     instructions?: StringNullableFilter<"Payment"> | string | null
     description?: StringNullableFilter<"Payment"> | string | null
     metadata?: JsonNullableFilter<"Payment">
+    errorMessage?: StringNullableFilter<"Payment"> | string | null
     expiresAt?: DateTimeNullableFilter<"Payment"> | Date | string | null
     completedAt?: DateTimeNullableFilter<"Payment"> | Date | string | null
     failedAt?: DateTimeNullableFilter<"Payment"> | Date | string | null
@@ -6441,12 +6526,14 @@ export namespace Prisma {
     amount?: SortOrder
     currency?: SortOrder
     status?: SortOrder
-    provider?: SortOrder
+    provider?: SortOrderInput | SortOrder
     paymentMethod?: SortOrder
     providerTransactionId?: SortOrderInput | SortOrder
     providerPaymentMethodId?: SortOrderInput | SortOrder
+    providerResponse?: SortOrderInput | SortOrder
     customerEmail?: SortOrder
     customerPhone?: SortOrderInput | SortOrder
+    customerName?: SortOrderInput | SortOrder
     customerId?: SortOrderInput | SortOrder
     redirectUrl?: SortOrderInput | SortOrder
     returnUrl?: SortOrderInput | SortOrder
@@ -6455,6 +6542,7 @@ export namespace Prisma {
     description?: SortOrderInput | SortOrder
     metadata?: SortOrderInput | SortOrder
     idempotencyKey?: SortOrderInput | SortOrder
+    errorMessage?: SortOrderInput | SortOrder
     expiresAt?: SortOrderInput | SortOrder
     completedAt?: SortOrderInput | SortOrder
     failedAt?: SortOrderInput | SortOrder
@@ -6476,12 +6564,14 @@ export namespace Prisma {
     amount?: DecimalWithAggregatesFilter<"Payment"> | Decimal | DecimalJsLike | number | string
     currency?: EnumCurrencyWithAggregatesFilter<"Payment"> | $Enums.Currency
     status?: EnumPaymentStatusWithAggregatesFilter<"Payment"> | $Enums.PaymentStatus
-    provider?: EnumPaymentProviderWithAggregatesFilter<"Payment"> | $Enums.PaymentProvider
+    provider?: EnumPaymentProviderNullableWithAggregatesFilter<"Payment"> | $Enums.PaymentProvider | null
     paymentMethod?: EnumPaymentMethodWithAggregatesFilter<"Payment"> | $Enums.PaymentMethod
     providerTransactionId?: StringNullableWithAggregatesFilter<"Payment"> | string | null
     providerPaymentMethodId?: StringNullableWithAggregatesFilter<"Payment"> | string | null
+    providerResponse?: JsonNullableWithAggregatesFilter<"Payment">
     customerEmail?: StringWithAggregatesFilter<"Payment"> | string
     customerPhone?: StringNullableWithAggregatesFilter<"Payment"> | string | null
+    customerName?: StringNullableWithAggregatesFilter<"Payment"> | string | null
     customerId?: StringNullableWithAggregatesFilter<"Payment"> | string | null
     redirectUrl?: StringNullableWithAggregatesFilter<"Payment"> | string | null
     returnUrl?: StringNullableWithAggregatesFilter<"Payment"> | string | null
@@ -6490,6 +6580,7 @@ export namespace Prisma {
     description?: StringNullableWithAggregatesFilter<"Payment"> | string | null
     metadata?: JsonNullableWithAggregatesFilter<"Payment">
     idempotencyKey?: StringNullableWithAggregatesFilter<"Payment"> | string | null
+    errorMessage?: StringNullableWithAggregatesFilter<"Payment"> | string | null
     expiresAt?: DateTimeNullableWithAggregatesFilter<"Payment"> | Date | string | null
     completedAt?: DateTimeNullableWithAggregatesFilter<"Payment"> | Date | string | null
     failedAt?: DateTimeNullableWithAggregatesFilter<"Payment"> | Date | string | null
@@ -6508,8 +6599,11 @@ export namespace Prisma {
     status?: EnumPaymentStatusFilter<"Refund"> | $Enums.PaymentStatus
     provider?: EnumPaymentProviderFilter<"Refund"> | $Enums.PaymentProvider
     providerRefundId?: StringNullableFilter<"Refund"> | string | null
+    providerResponse?: JsonNullableFilter<"Refund">
     reason?: StringNullableFilter<"Refund"> | string | null
     metadata?: JsonNullableFilter<"Refund">
+    idempotencyKey?: StringNullableFilter<"Refund"> | string | null
+    errorMessage?: StringNullableFilter<"Refund"> | string | null
     processedAt?: DateTimeNullableFilter<"Refund"> | Date | string | null
     completedAt?: DateTimeNullableFilter<"Refund"> | Date | string | null
     failedAt?: DateTimeNullableFilter<"Refund"> | Date | string | null
@@ -6526,8 +6620,11 @@ export namespace Prisma {
     status?: SortOrder
     provider?: SortOrder
     providerRefundId?: SortOrderInput | SortOrder
+    providerResponse?: SortOrderInput | SortOrder
     reason?: SortOrderInput | SortOrder
     metadata?: SortOrderInput | SortOrder
+    idempotencyKey?: SortOrderInput | SortOrder
+    errorMessage?: SortOrderInput | SortOrder
     processedAt?: SortOrderInput | SortOrder
     completedAt?: SortOrderInput | SortOrder
     failedAt?: SortOrderInput | SortOrder
@@ -6538,6 +6635,7 @@ export namespace Prisma {
 
   export type RefundWhereUniqueInput = Prisma.AtLeast<{
     id?: string
+    idempotencyKey?: string
     AND?: RefundWhereInput | RefundWhereInput[]
     OR?: RefundWhereInput[]
     NOT?: RefundWhereInput | RefundWhereInput[]
@@ -6547,15 +6645,17 @@ export namespace Prisma {
     status?: EnumPaymentStatusFilter<"Refund"> | $Enums.PaymentStatus
     provider?: EnumPaymentProviderFilter<"Refund"> | $Enums.PaymentProvider
     providerRefundId?: StringNullableFilter<"Refund"> | string | null
+    providerResponse?: JsonNullableFilter<"Refund">
     reason?: StringNullableFilter<"Refund"> | string | null
     metadata?: JsonNullableFilter<"Refund">
+    errorMessage?: StringNullableFilter<"Refund"> | string | null
     processedAt?: DateTimeNullableFilter<"Refund"> | Date | string | null
     completedAt?: DateTimeNullableFilter<"Refund"> | Date | string | null
     failedAt?: DateTimeNullableFilter<"Refund"> | Date | string | null
     createdAt?: DateTimeFilter<"Refund"> | Date | string
     updatedAt?: DateTimeFilter<"Refund"> | Date | string
     payment?: XOR<PaymentScalarRelationFilter, PaymentWhereInput>
-  }, "id">
+  }, "id" | "idempotencyKey">
 
   export type RefundOrderByWithAggregationInput = {
     id?: SortOrder
@@ -6565,8 +6665,11 @@ export namespace Prisma {
     status?: SortOrder
     provider?: SortOrder
     providerRefundId?: SortOrderInput | SortOrder
+    providerResponse?: SortOrderInput | SortOrder
     reason?: SortOrderInput | SortOrder
     metadata?: SortOrderInput | SortOrder
+    idempotencyKey?: SortOrderInput | SortOrder
+    errorMessage?: SortOrderInput | SortOrder
     processedAt?: SortOrderInput | SortOrder
     completedAt?: SortOrderInput | SortOrder
     failedAt?: SortOrderInput | SortOrder
@@ -6590,8 +6693,11 @@ export namespace Prisma {
     status?: EnumPaymentStatusWithAggregatesFilter<"Refund"> | $Enums.PaymentStatus
     provider?: EnumPaymentProviderWithAggregatesFilter<"Refund"> | $Enums.PaymentProvider
     providerRefundId?: StringNullableWithAggregatesFilter<"Refund"> | string | null
+    providerResponse?: JsonNullableWithAggregatesFilter<"Refund">
     reason?: StringNullableWithAggregatesFilter<"Refund"> | string | null
     metadata?: JsonNullableWithAggregatesFilter<"Refund">
+    idempotencyKey?: StringNullableWithAggregatesFilter<"Refund"> | string | null
+    errorMessage?: StringNullableWithAggregatesFilter<"Refund"> | string | null
     processedAt?: DateTimeNullableWithAggregatesFilter<"Refund"> | Date | string | null
     completedAt?: DateTimeNullableWithAggregatesFilter<"Refund"> | Date | string | null
     failedAt?: DateTimeNullableWithAggregatesFilter<"Refund"> | Date | string | null
@@ -6760,12 +6866,14 @@ export namespace Prisma {
     amount: Decimal | DecimalJsLike | number | string
     currency: $Enums.Currency
     status?: $Enums.PaymentStatus
-    provider: $Enums.PaymentProvider
+    provider?: $Enums.PaymentProvider | null
     paymentMethod: $Enums.PaymentMethod
     providerTransactionId?: string | null
     providerPaymentMethodId?: string | null
+    providerResponse?: NullableJsonNullValueInput | InputJsonValue
     customerEmail: string
     customerPhone?: string | null
+    customerName?: string | null
     customerId?: string | null
     redirectUrl?: string | null
     returnUrl?: string | null
@@ -6774,6 +6882,7 @@ export namespace Prisma {
     description?: string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     idempotencyKey?: string | null
+    errorMessage?: string | null
     expiresAt?: Date | string | null
     completedAt?: Date | string | null
     failedAt?: Date | string | null
@@ -6789,12 +6898,14 @@ export namespace Prisma {
     amount: Decimal | DecimalJsLike | number | string
     currency: $Enums.Currency
     status?: $Enums.PaymentStatus
-    provider: $Enums.PaymentProvider
+    provider?: $Enums.PaymentProvider | null
     paymentMethod: $Enums.PaymentMethod
     providerTransactionId?: string | null
     providerPaymentMethodId?: string | null
+    providerResponse?: NullableJsonNullValueInput | InputJsonValue
     customerEmail: string
     customerPhone?: string | null
+    customerName?: string | null
     customerId?: string | null
     redirectUrl?: string | null
     returnUrl?: string | null
@@ -6803,6 +6914,7 @@ export namespace Prisma {
     description?: string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     idempotencyKey?: string | null
+    errorMessage?: string | null
     expiresAt?: Date | string | null
     completedAt?: Date | string | null
     failedAt?: Date | string | null
@@ -6818,12 +6930,14 @@ export namespace Prisma {
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
-    provider?: EnumPaymentProviderFieldUpdateOperationsInput | $Enums.PaymentProvider
+    provider?: NullableEnumPaymentProviderFieldUpdateOperationsInput | $Enums.PaymentProvider | null
     paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     providerTransactionId?: NullableStringFieldUpdateOperationsInput | string | null
     providerPaymentMethodId?: NullableStringFieldUpdateOperationsInput | string | null
+    providerResponse?: NullableJsonNullValueInput | InputJsonValue
     customerEmail?: StringFieldUpdateOperationsInput | string
     customerPhone?: NullableStringFieldUpdateOperationsInput | string | null
+    customerName?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     redirectUrl?: NullableStringFieldUpdateOperationsInput | string | null
     returnUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -6832,6 +6946,7 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     idempotencyKey?: NullableStringFieldUpdateOperationsInput | string | null
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     failedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -6847,12 +6962,14 @@ export namespace Prisma {
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
-    provider?: EnumPaymentProviderFieldUpdateOperationsInput | $Enums.PaymentProvider
+    provider?: NullableEnumPaymentProviderFieldUpdateOperationsInput | $Enums.PaymentProvider | null
     paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     providerTransactionId?: NullableStringFieldUpdateOperationsInput | string | null
     providerPaymentMethodId?: NullableStringFieldUpdateOperationsInput | string | null
+    providerResponse?: NullableJsonNullValueInput | InputJsonValue
     customerEmail?: StringFieldUpdateOperationsInput | string
     customerPhone?: NullableStringFieldUpdateOperationsInput | string | null
+    customerName?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     redirectUrl?: NullableStringFieldUpdateOperationsInput | string | null
     returnUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -6861,6 +6978,7 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     idempotencyKey?: NullableStringFieldUpdateOperationsInput | string | null
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     failedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -6876,12 +6994,14 @@ export namespace Prisma {
     amount: Decimal | DecimalJsLike | number | string
     currency: $Enums.Currency
     status?: $Enums.PaymentStatus
-    provider: $Enums.PaymentProvider
+    provider?: $Enums.PaymentProvider | null
     paymentMethod: $Enums.PaymentMethod
     providerTransactionId?: string | null
     providerPaymentMethodId?: string | null
+    providerResponse?: NullableJsonNullValueInput | InputJsonValue
     customerEmail: string
     customerPhone?: string | null
+    customerName?: string | null
     customerId?: string | null
     redirectUrl?: string | null
     returnUrl?: string | null
@@ -6890,6 +7010,7 @@ export namespace Prisma {
     description?: string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     idempotencyKey?: string | null
+    errorMessage?: string | null
     expiresAt?: Date | string | null
     completedAt?: Date | string | null
     failedAt?: Date | string | null
@@ -6903,12 +7024,14 @@ export namespace Prisma {
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
-    provider?: EnumPaymentProviderFieldUpdateOperationsInput | $Enums.PaymentProvider
+    provider?: NullableEnumPaymentProviderFieldUpdateOperationsInput | $Enums.PaymentProvider | null
     paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     providerTransactionId?: NullableStringFieldUpdateOperationsInput | string | null
     providerPaymentMethodId?: NullableStringFieldUpdateOperationsInput | string | null
+    providerResponse?: NullableJsonNullValueInput | InputJsonValue
     customerEmail?: StringFieldUpdateOperationsInput | string
     customerPhone?: NullableStringFieldUpdateOperationsInput | string | null
+    customerName?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     redirectUrl?: NullableStringFieldUpdateOperationsInput | string | null
     returnUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -6917,6 +7040,7 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     idempotencyKey?: NullableStringFieldUpdateOperationsInput | string | null
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     failedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -6930,12 +7054,14 @@ export namespace Prisma {
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
-    provider?: EnumPaymentProviderFieldUpdateOperationsInput | $Enums.PaymentProvider
+    provider?: NullableEnumPaymentProviderFieldUpdateOperationsInput | $Enums.PaymentProvider | null
     paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     providerTransactionId?: NullableStringFieldUpdateOperationsInput | string | null
     providerPaymentMethodId?: NullableStringFieldUpdateOperationsInput | string | null
+    providerResponse?: NullableJsonNullValueInput | InputJsonValue
     customerEmail?: StringFieldUpdateOperationsInput | string
     customerPhone?: NullableStringFieldUpdateOperationsInput | string | null
+    customerName?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     redirectUrl?: NullableStringFieldUpdateOperationsInput | string | null
     returnUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -6944,6 +7070,7 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     idempotencyKey?: NullableStringFieldUpdateOperationsInput | string | null
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     failedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -6958,8 +7085,11 @@ export namespace Prisma {
     status?: $Enums.PaymentStatus
     provider: $Enums.PaymentProvider
     providerRefundId?: string | null
+    providerResponse?: NullableJsonNullValueInput | InputJsonValue
     reason?: string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
+    idempotencyKey?: string | null
+    errorMessage?: string | null
     processedAt?: Date | string | null
     completedAt?: Date | string | null
     failedAt?: Date | string | null
@@ -6976,8 +7106,11 @@ export namespace Prisma {
     status?: $Enums.PaymentStatus
     provider: $Enums.PaymentProvider
     providerRefundId?: string | null
+    providerResponse?: NullableJsonNullValueInput | InputJsonValue
     reason?: string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
+    idempotencyKey?: string | null
+    errorMessage?: string | null
     processedAt?: Date | string | null
     completedAt?: Date | string | null
     failedAt?: Date | string | null
@@ -6992,8 +7125,11 @@ export namespace Prisma {
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     provider?: EnumPaymentProviderFieldUpdateOperationsInput | $Enums.PaymentProvider
     providerRefundId?: NullableStringFieldUpdateOperationsInput | string | null
+    providerResponse?: NullableJsonNullValueInput | InputJsonValue
     reason?: NullableStringFieldUpdateOperationsInput | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
+    idempotencyKey?: NullableStringFieldUpdateOperationsInput | string | null
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
     processedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     failedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -7010,8 +7146,11 @@ export namespace Prisma {
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     provider?: EnumPaymentProviderFieldUpdateOperationsInput | $Enums.PaymentProvider
     providerRefundId?: NullableStringFieldUpdateOperationsInput | string | null
+    providerResponse?: NullableJsonNullValueInput | InputJsonValue
     reason?: NullableStringFieldUpdateOperationsInput | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
+    idempotencyKey?: NullableStringFieldUpdateOperationsInput | string | null
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
     processedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     failedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -7027,8 +7166,11 @@ export namespace Prisma {
     status?: $Enums.PaymentStatus
     provider: $Enums.PaymentProvider
     providerRefundId?: string | null
+    providerResponse?: NullableJsonNullValueInput | InputJsonValue
     reason?: string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
+    idempotencyKey?: string | null
+    errorMessage?: string | null
     processedAt?: Date | string | null
     completedAt?: Date | string | null
     failedAt?: Date | string | null
@@ -7043,8 +7185,11 @@ export namespace Prisma {
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     provider?: EnumPaymentProviderFieldUpdateOperationsInput | $Enums.PaymentProvider
     providerRefundId?: NullableStringFieldUpdateOperationsInput | string | null
+    providerResponse?: NullableJsonNullValueInput | InputJsonValue
     reason?: NullableStringFieldUpdateOperationsInput | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
+    idempotencyKey?: NullableStringFieldUpdateOperationsInput | string | null
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
     processedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     failedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -7060,8 +7205,11 @@ export namespace Prisma {
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     provider?: EnumPaymentProviderFieldUpdateOperationsInput | $Enums.PaymentProvider
     providerRefundId?: NullableStringFieldUpdateOperationsInput | string | null
+    providerResponse?: NullableJsonNullValueInput | InputJsonValue
     reason?: NullableStringFieldUpdateOperationsInput | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
+    idempotencyKey?: NullableStringFieldUpdateOperationsInput | string | null
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
     processedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     failedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -7283,11 +7431,11 @@ export namespace Prisma {
     not?: NestedEnumPaymentStatusFilter<$PrismaModel> | $Enums.PaymentStatus
   }
 
-  export type EnumPaymentProviderFilter<$PrismaModel = never> = {
-    equals?: $Enums.PaymentProvider | EnumPaymentProviderFieldRefInput<$PrismaModel>
-    in?: $Enums.PaymentProvider[] | ListEnumPaymentProviderFieldRefInput<$PrismaModel>
-    notIn?: $Enums.PaymentProvider[] | ListEnumPaymentProviderFieldRefInput<$PrismaModel>
-    not?: NestedEnumPaymentProviderFilter<$PrismaModel> | $Enums.PaymentProvider
+  export type EnumPaymentProviderNullableFilter<$PrismaModel = never> = {
+    equals?: $Enums.PaymentProvider | EnumPaymentProviderFieldRefInput<$PrismaModel> | null
+    in?: $Enums.PaymentProvider[] | ListEnumPaymentProviderFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.PaymentProvider[] | ListEnumPaymentProviderFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumPaymentProviderNullableFilter<$PrismaModel> | $Enums.PaymentProvider | null
   }
 
   export type EnumPaymentMethodFilter<$PrismaModel = never> = {
@@ -7392,8 +7540,10 @@ export namespace Prisma {
     paymentMethod?: SortOrder
     providerTransactionId?: SortOrder
     providerPaymentMethodId?: SortOrder
+    providerResponse?: SortOrder
     customerEmail?: SortOrder
     customerPhone?: SortOrder
+    customerName?: SortOrder
     customerId?: SortOrder
     redirectUrl?: SortOrder
     returnUrl?: SortOrder
@@ -7402,6 +7552,7 @@ export namespace Prisma {
     description?: SortOrder
     metadata?: SortOrder
     idempotencyKey?: SortOrder
+    errorMessage?: SortOrder
     expiresAt?: SortOrder
     completedAt?: SortOrder
     failedAt?: SortOrder
@@ -7425,6 +7576,7 @@ export namespace Prisma {
     providerPaymentMethodId?: SortOrder
     customerEmail?: SortOrder
     customerPhone?: SortOrder
+    customerName?: SortOrder
     customerId?: SortOrder
     redirectUrl?: SortOrder
     returnUrl?: SortOrder
@@ -7432,6 +7584,7 @@ export namespace Prisma {
     instructions?: SortOrder
     description?: SortOrder
     idempotencyKey?: SortOrder
+    errorMessage?: SortOrder
     expiresAt?: SortOrder
     completedAt?: SortOrder
     failedAt?: SortOrder
@@ -7451,6 +7604,7 @@ export namespace Prisma {
     providerPaymentMethodId?: SortOrder
     customerEmail?: SortOrder
     customerPhone?: SortOrder
+    customerName?: SortOrder
     customerId?: SortOrder
     redirectUrl?: SortOrder
     returnUrl?: SortOrder
@@ -7458,6 +7612,7 @@ export namespace Prisma {
     instructions?: SortOrder
     description?: SortOrder
     idempotencyKey?: SortOrder
+    errorMessage?: SortOrder
     expiresAt?: SortOrder
     completedAt?: SortOrder
     failedAt?: SortOrder
@@ -7523,14 +7678,14 @@ export namespace Prisma {
     _max?: NestedEnumPaymentStatusFilter<$PrismaModel>
   }
 
-  export type EnumPaymentProviderWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.PaymentProvider | EnumPaymentProviderFieldRefInput<$PrismaModel>
-    in?: $Enums.PaymentProvider[] | ListEnumPaymentProviderFieldRefInput<$PrismaModel>
-    notIn?: $Enums.PaymentProvider[] | ListEnumPaymentProviderFieldRefInput<$PrismaModel>
-    not?: NestedEnumPaymentProviderWithAggregatesFilter<$PrismaModel> | $Enums.PaymentProvider
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedEnumPaymentProviderFilter<$PrismaModel>
-    _max?: NestedEnumPaymentProviderFilter<$PrismaModel>
+  export type EnumPaymentProviderNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.PaymentProvider | EnumPaymentProviderFieldRefInput<$PrismaModel> | null
+    in?: $Enums.PaymentProvider[] | ListEnumPaymentProviderFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.PaymentProvider[] | ListEnumPaymentProviderFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumPaymentProviderNullableWithAggregatesFilter<$PrismaModel> | $Enums.PaymentProvider | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedEnumPaymentProviderNullableFilter<$PrismaModel>
+    _max?: NestedEnumPaymentProviderNullableFilter<$PrismaModel>
   }
 
   export type EnumPaymentMethodWithAggregatesFilter<$PrismaModel = never> = {
@@ -7615,6 +7770,13 @@ export namespace Prisma {
     _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
+  export type EnumPaymentProviderFilter<$PrismaModel = never> = {
+    equals?: $Enums.PaymentProvider | EnumPaymentProviderFieldRefInput<$PrismaModel>
+    in?: $Enums.PaymentProvider[] | ListEnumPaymentProviderFieldRefInput<$PrismaModel>
+    notIn?: $Enums.PaymentProvider[] | ListEnumPaymentProviderFieldRefInput<$PrismaModel>
+    not?: NestedEnumPaymentProviderFilter<$PrismaModel> | $Enums.PaymentProvider
+  }
+
   export type PaymentScalarRelationFilter = {
     is?: PaymentWhereInput
     isNot?: PaymentWhereInput
@@ -7628,8 +7790,11 @@ export namespace Prisma {
     status?: SortOrder
     provider?: SortOrder
     providerRefundId?: SortOrder
+    providerResponse?: SortOrder
     reason?: SortOrder
     metadata?: SortOrder
+    idempotencyKey?: SortOrder
+    errorMessage?: SortOrder
     processedAt?: SortOrder
     completedAt?: SortOrder
     failedAt?: SortOrder
@@ -7650,6 +7815,8 @@ export namespace Prisma {
     provider?: SortOrder
     providerRefundId?: SortOrder
     reason?: SortOrder
+    idempotencyKey?: SortOrder
+    errorMessage?: SortOrder
     processedAt?: SortOrder
     completedAt?: SortOrder
     failedAt?: SortOrder
@@ -7666,6 +7833,8 @@ export namespace Prisma {
     provider?: SortOrder
     providerRefundId?: SortOrder
     reason?: SortOrder
+    idempotencyKey?: SortOrder
+    errorMessage?: SortOrder
     processedAt?: SortOrder
     completedAt?: SortOrder
     failedAt?: SortOrder
@@ -7675,6 +7844,16 @@ export namespace Prisma {
 
   export type RefundSumOrderByAggregateInput = {
     amount?: SortOrder
+  }
+
+  export type EnumPaymentProviderWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.PaymentProvider | EnumPaymentProviderFieldRefInput<$PrismaModel>
+    in?: $Enums.PaymentProvider[] | ListEnumPaymentProviderFieldRefInput<$PrismaModel>
+    notIn?: $Enums.PaymentProvider[] | ListEnumPaymentProviderFieldRefInput<$PrismaModel>
+    not?: NestedEnumPaymentProviderWithAggregatesFilter<$PrismaModel> | $Enums.PaymentProvider
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumPaymentProviderFilter<$PrismaModel>
+    _max?: NestedEnumPaymentProviderFilter<$PrismaModel>
   }
   export type JsonFilter<$PrismaModel = never> =
     | PatchUndefined<
@@ -7898,8 +8077,8 @@ export namespace Prisma {
     set?: $Enums.PaymentStatus
   }
 
-  export type EnumPaymentProviderFieldUpdateOperationsInput = {
-    set?: $Enums.PaymentProvider
+  export type NullableEnumPaymentProviderFieldUpdateOperationsInput = {
+    set?: $Enums.PaymentProvider | null
   }
 
   export type EnumPaymentMethodFieldUpdateOperationsInput = {
@@ -7980,6 +8159,10 @@ export namespace Prisma {
     connect?: PaymentWhereUniqueInput
   }
 
+  export type EnumPaymentProviderFieldUpdateOperationsInput = {
+    set?: $Enums.PaymentProvider
+  }
+
   export type PaymentUpdateOneRequiredWithoutRefundsNestedInput = {
     create?: XOR<PaymentCreateWithoutRefundsInput, PaymentUncheckedCreateWithoutRefundsInput>
     connectOrCreate?: PaymentCreateOrConnectWithoutRefundsInput
@@ -8053,11 +8236,11 @@ export namespace Prisma {
     not?: NestedEnumPaymentStatusFilter<$PrismaModel> | $Enums.PaymentStatus
   }
 
-  export type NestedEnumPaymentProviderFilter<$PrismaModel = never> = {
-    equals?: $Enums.PaymentProvider | EnumPaymentProviderFieldRefInput<$PrismaModel>
-    in?: $Enums.PaymentProvider[] | ListEnumPaymentProviderFieldRefInput<$PrismaModel>
-    notIn?: $Enums.PaymentProvider[] | ListEnumPaymentProviderFieldRefInput<$PrismaModel>
-    not?: NestedEnumPaymentProviderFilter<$PrismaModel> | $Enums.PaymentProvider
+  export type NestedEnumPaymentProviderNullableFilter<$PrismaModel = never> = {
+    equals?: $Enums.PaymentProvider | EnumPaymentProviderFieldRefInput<$PrismaModel> | null
+    in?: $Enums.PaymentProvider[] | ListEnumPaymentProviderFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.PaymentProvider[] | ListEnumPaymentProviderFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumPaymentProviderNullableFilter<$PrismaModel> | $Enums.PaymentProvider | null
   }
 
   export type NestedEnumPaymentMethodFilter<$PrismaModel = never> = {
@@ -8167,14 +8350,25 @@ export namespace Prisma {
     _max?: NestedEnumPaymentStatusFilter<$PrismaModel>
   }
 
-  export type NestedEnumPaymentProviderWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.PaymentProvider | EnumPaymentProviderFieldRefInput<$PrismaModel>
-    in?: $Enums.PaymentProvider[] | ListEnumPaymentProviderFieldRefInput<$PrismaModel>
-    notIn?: $Enums.PaymentProvider[] | ListEnumPaymentProviderFieldRefInput<$PrismaModel>
-    not?: NestedEnumPaymentProviderWithAggregatesFilter<$PrismaModel> | $Enums.PaymentProvider
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedEnumPaymentProviderFilter<$PrismaModel>
-    _max?: NestedEnumPaymentProviderFilter<$PrismaModel>
+  export type NestedEnumPaymentProviderNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.PaymentProvider | EnumPaymentProviderFieldRefInput<$PrismaModel> | null
+    in?: $Enums.PaymentProvider[] | ListEnumPaymentProviderFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.PaymentProvider[] | ListEnumPaymentProviderFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumPaymentProviderNullableWithAggregatesFilter<$PrismaModel> | $Enums.PaymentProvider | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedEnumPaymentProviderNullableFilter<$PrismaModel>
+    _max?: NestedEnumPaymentProviderNullableFilter<$PrismaModel>
+  }
+
+  export type NestedIntNullableFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableFilter<$PrismaModel> | number | null
   }
 
   export type NestedEnumPaymentMethodWithAggregatesFilter<$PrismaModel = never> = {
@@ -8202,17 +8396,6 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedStringNullableFilter<$PrismaModel>
     _max?: NestedStringNullableFilter<$PrismaModel>
-  }
-
-  export type NestedIntNullableFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableFilter<$PrismaModel> | number | null
   }
   export type NestedJsonNullableFilter<$PrismaModel = never> =
     | PatchUndefined<
@@ -8264,6 +8447,23 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedDateTimeFilter<$PrismaModel>
     _max?: NestedDateTimeFilter<$PrismaModel>
+  }
+
+  export type NestedEnumPaymentProviderFilter<$PrismaModel = never> = {
+    equals?: $Enums.PaymentProvider | EnumPaymentProviderFieldRefInput<$PrismaModel>
+    in?: $Enums.PaymentProvider[] | ListEnumPaymentProviderFieldRefInput<$PrismaModel>
+    notIn?: $Enums.PaymentProvider[] | ListEnumPaymentProviderFieldRefInput<$PrismaModel>
+    not?: NestedEnumPaymentProviderFilter<$PrismaModel> | $Enums.PaymentProvider
+  }
+
+  export type NestedEnumPaymentProviderWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.PaymentProvider | EnumPaymentProviderFieldRefInput<$PrismaModel>
+    in?: $Enums.PaymentProvider[] | ListEnumPaymentProviderFieldRefInput<$PrismaModel>
+    notIn?: $Enums.PaymentProvider[] | ListEnumPaymentProviderFieldRefInput<$PrismaModel>
+    not?: NestedEnumPaymentProviderWithAggregatesFilter<$PrismaModel> | $Enums.PaymentProvider
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumPaymentProviderFilter<$PrismaModel>
+    _max?: NestedEnumPaymentProviderFilter<$PrismaModel>
   }
   export type NestedJsonFilter<$PrismaModel = never> =
     | PatchUndefined<
@@ -8336,8 +8536,11 @@ export namespace Prisma {
     status?: $Enums.PaymentStatus
     provider: $Enums.PaymentProvider
     providerRefundId?: string | null
+    providerResponse?: NullableJsonNullValueInput | InputJsonValue
     reason?: string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
+    idempotencyKey?: string | null
+    errorMessage?: string | null
     processedAt?: Date | string | null
     completedAt?: Date | string | null
     failedAt?: Date | string | null
@@ -8352,8 +8555,11 @@ export namespace Prisma {
     status?: $Enums.PaymentStatus
     provider: $Enums.PaymentProvider
     providerRefundId?: string | null
+    providerResponse?: NullableJsonNullValueInput | InputJsonValue
     reason?: string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
+    idempotencyKey?: string | null
+    errorMessage?: string | null
     processedAt?: Date | string | null
     completedAt?: Date | string | null
     failedAt?: Date | string | null
@@ -8426,8 +8632,11 @@ export namespace Prisma {
     status?: EnumPaymentStatusFilter<"Refund"> | $Enums.PaymentStatus
     provider?: EnumPaymentProviderFilter<"Refund"> | $Enums.PaymentProvider
     providerRefundId?: StringNullableFilter<"Refund"> | string | null
+    providerResponse?: JsonNullableFilter<"Refund">
     reason?: StringNullableFilter<"Refund"> | string | null
     metadata?: JsonNullableFilter<"Refund">
+    idempotencyKey?: StringNullableFilter<"Refund"> | string | null
+    errorMessage?: StringNullableFilter<"Refund"> | string | null
     processedAt?: DateTimeNullableFilter<"Refund"> | Date | string | null
     completedAt?: DateTimeNullableFilter<"Refund"> | Date | string | null
     failedAt?: DateTimeNullableFilter<"Refund"> | Date | string | null
@@ -8470,12 +8679,14 @@ export namespace Prisma {
     amount: Decimal | DecimalJsLike | number | string
     currency: $Enums.Currency
     status?: $Enums.PaymentStatus
-    provider: $Enums.PaymentProvider
+    provider?: $Enums.PaymentProvider | null
     paymentMethod: $Enums.PaymentMethod
     providerTransactionId?: string | null
     providerPaymentMethodId?: string | null
+    providerResponse?: NullableJsonNullValueInput | InputJsonValue
     customerEmail: string
     customerPhone?: string | null
+    customerName?: string | null
     customerId?: string | null
     redirectUrl?: string | null
     returnUrl?: string | null
@@ -8484,6 +8695,7 @@ export namespace Prisma {
     description?: string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     idempotencyKey?: string | null
+    errorMessage?: string | null
     expiresAt?: Date | string | null
     completedAt?: Date | string | null
     failedAt?: Date | string | null
@@ -8498,12 +8710,14 @@ export namespace Prisma {
     amount: Decimal | DecimalJsLike | number | string
     currency: $Enums.Currency
     status?: $Enums.PaymentStatus
-    provider: $Enums.PaymentProvider
+    provider?: $Enums.PaymentProvider | null
     paymentMethod: $Enums.PaymentMethod
     providerTransactionId?: string | null
     providerPaymentMethodId?: string | null
+    providerResponse?: NullableJsonNullValueInput | InputJsonValue
     customerEmail: string
     customerPhone?: string | null
+    customerName?: string | null
     customerId?: string | null
     redirectUrl?: string | null
     returnUrl?: string | null
@@ -8512,6 +8726,7 @@ export namespace Prisma {
     description?: string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     idempotencyKey?: string | null
+    errorMessage?: string | null
     expiresAt?: Date | string | null
     completedAt?: Date | string | null
     failedAt?: Date | string | null
@@ -8542,12 +8757,14 @@ export namespace Prisma {
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
-    provider?: EnumPaymentProviderFieldUpdateOperationsInput | $Enums.PaymentProvider
+    provider?: NullableEnumPaymentProviderFieldUpdateOperationsInput | $Enums.PaymentProvider | null
     paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     providerTransactionId?: NullableStringFieldUpdateOperationsInput | string | null
     providerPaymentMethodId?: NullableStringFieldUpdateOperationsInput | string | null
+    providerResponse?: NullableJsonNullValueInput | InputJsonValue
     customerEmail?: StringFieldUpdateOperationsInput | string
     customerPhone?: NullableStringFieldUpdateOperationsInput | string | null
+    customerName?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     redirectUrl?: NullableStringFieldUpdateOperationsInput | string | null
     returnUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -8556,6 +8773,7 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     idempotencyKey?: NullableStringFieldUpdateOperationsInput | string | null
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     failedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -8570,12 +8788,14 @@ export namespace Prisma {
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
-    provider?: EnumPaymentProviderFieldUpdateOperationsInput | $Enums.PaymentProvider
+    provider?: NullableEnumPaymentProviderFieldUpdateOperationsInput | $Enums.PaymentProvider | null
     paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     providerTransactionId?: NullableStringFieldUpdateOperationsInput | string | null
     providerPaymentMethodId?: NullableStringFieldUpdateOperationsInput | string | null
+    providerResponse?: NullableJsonNullValueInput | InputJsonValue
     customerEmail?: StringFieldUpdateOperationsInput | string
     customerPhone?: NullableStringFieldUpdateOperationsInput | string | null
+    customerName?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     redirectUrl?: NullableStringFieldUpdateOperationsInput | string | null
     returnUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -8584,6 +8804,7 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     idempotencyKey?: NullableStringFieldUpdateOperationsInput | string | null
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     failedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -8598,12 +8819,14 @@ export namespace Prisma {
     amount: Decimal | DecimalJsLike | number | string
     currency: $Enums.Currency
     status?: $Enums.PaymentStatus
-    provider: $Enums.PaymentProvider
+    provider?: $Enums.PaymentProvider | null
     paymentMethod: $Enums.PaymentMethod
     providerTransactionId?: string | null
     providerPaymentMethodId?: string | null
+    providerResponse?: NullableJsonNullValueInput | InputJsonValue
     customerEmail: string
     customerPhone?: string | null
+    customerName?: string | null
     customerId?: string | null
     redirectUrl?: string | null
     returnUrl?: string | null
@@ -8612,6 +8835,7 @@ export namespace Prisma {
     description?: string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     idempotencyKey?: string | null
+    errorMessage?: string | null
     expiresAt?: Date | string | null
     completedAt?: Date | string | null
     failedAt?: Date | string | null
@@ -8626,12 +8850,14 @@ export namespace Prisma {
     amount: Decimal | DecimalJsLike | number | string
     currency: $Enums.Currency
     status?: $Enums.PaymentStatus
-    provider: $Enums.PaymentProvider
+    provider?: $Enums.PaymentProvider | null
     paymentMethod: $Enums.PaymentMethod
     providerTransactionId?: string | null
     providerPaymentMethodId?: string | null
+    providerResponse?: NullableJsonNullValueInput | InputJsonValue
     customerEmail: string
     customerPhone?: string | null
+    customerName?: string | null
     customerId?: string | null
     redirectUrl?: string | null
     returnUrl?: string | null
@@ -8640,6 +8866,7 @@ export namespace Prisma {
     description?: string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     idempotencyKey?: string | null
+    errorMessage?: string | null
     expiresAt?: Date | string | null
     completedAt?: Date | string | null
     failedAt?: Date | string | null
@@ -8670,12 +8897,14 @@ export namespace Prisma {
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
-    provider?: EnumPaymentProviderFieldUpdateOperationsInput | $Enums.PaymentProvider
+    provider?: NullableEnumPaymentProviderFieldUpdateOperationsInput | $Enums.PaymentProvider | null
     paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     providerTransactionId?: NullableStringFieldUpdateOperationsInput | string | null
     providerPaymentMethodId?: NullableStringFieldUpdateOperationsInput | string | null
+    providerResponse?: NullableJsonNullValueInput | InputJsonValue
     customerEmail?: StringFieldUpdateOperationsInput | string
     customerPhone?: NullableStringFieldUpdateOperationsInput | string | null
+    customerName?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     redirectUrl?: NullableStringFieldUpdateOperationsInput | string | null
     returnUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -8684,6 +8913,7 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     idempotencyKey?: NullableStringFieldUpdateOperationsInput | string | null
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     failedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -8698,12 +8928,14 @@ export namespace Prisma {
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
-    provider?: EnumPaymentProviderFieldUpdateOperationsInput | $Enums.PaymentProvider
+    provider?: NullableEnumPaymentProviderFieldUpdateOperationsInput | $Enums.PaymentProvider | null
     paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     providerTransactionId?: NullableStringFieldUpdateOperationsInput | string | null
     providerPaymentMethodId?: NullableStringFieldUpdateOperationsInput | string | null
+    providerResponse?: NullableJsonNullValueInput | InputJsonValue
     customerEmail?: StringFieldUpdateOperationsInput | string
     customerPhone?: NullableStringFieldUpdateOperationsInput | string | null
+    customerName?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     redirectUrl?: NullableStringFieldUpdateOperationsInput | string | null
     returnUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -8712,6 +8944,7 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     idempotencyKey?: NullableStringFieldUpdateOperationsInput | string | null
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     failedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -8727,8 +8960,11 @@ export namespace Prisma {
     status?: $Enums.PaymentStatus
     provider: $Enums.PaymentProvider
     providerRefundId?: string | null
+    providerResponse?: NullableJsonNullValueInput | InputJsonValue
     reason?: string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
+    idempotencyKey?: string | null
+    errorMessage?: string | null
     processedAt?: Date | string | null
     completedAt?: Date | string | null
     failedAt?: Date | string | null
@@ -8752,8 +8988,11 @@ export namespace Prisma {
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     provider?: EnumPaymentProviderFieldUpdateOperationsInput | $Enums.PaymentProvider
     providerRefundId?: NullableStringFieldUpdateOperationsInput | string | null
+    providerResponse?: NullableJsonNullValueInput | InputJsonValue
     reason?: NullableStringFieldUpdateOperationsInput | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
+    idempotencyKey?: NullableStringFieldUpdateOperationsInput | string | null
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
     processedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     failedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -8768,8 +9007,11 @@ export namespace Prisma {
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     provider?: EnumPaymentProviderFieldUpdateOperationsInput | $Enums.PaymentProvider
     providerRefundId?: NullableStringFieldUpdateOperationsInput | string | null
+    providerResponse?: NullableJsonNullValueInput | InputJsonValue
     reason?: NullableStringFieldUpdateOperationsInput | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
+    idempotencyKey?: NullableStringFieldUpdateOperationsInput | string | null
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
     processedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     failedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -8784,8 +9026,11 @@ export namespace Prisma {
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     provider?: EnumPaymentProviderFieldUpdateOperationsInput | $Enums.PaymentProvider
     providerRefundId?: NullableStringFieldUpdateOperationsInput | string | null
+    providerResponse?: NullableJsonNullValueInput | InputJsonValue
     reason?: NullableStringFieldUpdateOperationsInput | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
+    idempotencyKey?: NullableStringFieldUpdateOperationsInput | string | null
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
     processedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     failedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
