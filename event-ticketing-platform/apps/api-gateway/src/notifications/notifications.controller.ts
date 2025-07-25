@@ -1,7 +1,10 @@
 // =====================================================
 // apps/api-gateway/src/notifications/notifications.controller.ts
-// Following the EXACT pattern of auth.controller.ts and events.controller.ts
+// DEBUG VERSION - With console logs to trace loading
 // =====================================================
+
+console.log('🔍 DEBUG: NotificationsController file being loaded');
+
 import {
   Controller,
   Post,
@@ -18,6 +21,8 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagg
 import { firstValueFrom } from 'rxjs';
 import { IsString, IsEmail, IsOptional, IsObject } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+
+console.log('🔍 DEBUG: All imports loaded successfully');
 
 // DTOs following the same pattern as auth.controller.ts
 export class SendNotificationDto {
@@ -98,21 +103,39 @@ export class SendEmailDto {
   templateData?: any;
 }
 
+console.log('🔍 DEBUG: DTOs defined, creating controller class');
+
 @ApiTags('Notifications')
 @Controller('notifications')
 export class NotificationsController {
   constructor(
     @Inject('NOTIFICATION_SERVICE') private readonly notificationServiceClient: ClientProxy,
-  ) {}
+  ) {
+    console.log('🔍 DEBUG: NotificationsController constructor called');
+    console.log('🔍 DEBUG: NOTIFICATION_SERVICE client injected:', !!notificationServiceClient);
+    console.log('🔍 DEBUG: notificationServiceClient type:', typeof notificationServiceClient);
+    
+    if (notificationServiceClient) {
+      console.log('🔍 DEBUG: ✅ NOTIFICATION_SERVICE successfully injected');
+    } else {
+      console.log('🔍 DEBUG: ❌ NOTIFICATION_SERVICE injection FAILED');
+    }
+  }
 
   @Get('health')
   @ApiOperation({ summary: 'Notification service health check' })
   @ApiResponse({ status: 200, description: 'Notification service is healthy' })
   async healthCheck() {
+    console.log('🔍 DEBUG: healthCheck method called');
+    
     try {
+      console.log('🔍 DEBUG: Attempting to send health check message');
+      
       const result = await firstValueFrom(
         this.notificationServiceClient.send('notification.health', {}),
       );
+
+      console.log('🔍 DEBUG: Health check result received:', result);
 
       if (!result.success) {
         throw new HttpException(
@@ -126,6 +149,8 @@ export class NotificationsController {
         data: result.data,
       };
     } catch (error) {
+      console.log('🔍 DEBUG: Health check error:', error.message);
+      
       if (error instanceof HttpException) {
         throw error;
       }
@@ -146,6 +171,8 @@ export class NotificationsController {
     @Body() sendNotificationDto: SendNotificationDto,
     @Headers('authorization') authorization?: string,
   ) {
+    console.log('🔍 DEBUG: sendNotification method called');
+    
     try {
       if (!authorization) {
         throw new HttpException('Authorization header required', HttpStatus.UNAUTHORIZED);
@@ -163,12 +190,16 @@ export class NotificationsController {
         throw new HttpException('Invalid token', HttpStatus.UNAUTHORIZED);
       }
 
+      console.log('🔍 DEBUG: Sending notification for user:', userId);
+
       const result = await firstValueFrom(
         this.notificationServiceClient.send('notification.send', {
           ...sendNotificationDto,
           sentBy: userId,
         }),
       );
+
+      console.log('🔍 DEBUG: Notification result:', result);
 
       if (!result.success) {
         throw new HttpException(
@@ -182,6 +213,8 @@ export class NotificationsController {
         data: result.data,
       };
     } catch (error) {
+      console.log('🔍 DEBUG: sendNotification error:', error.message);
+      
       if (error instanceof HttpException) {
         throw error;
       }
@@ -200,14 +233,20 @@ export class NotificationsController {
     @Body() sendEmailDto: SendEmailDto,
     @Headers('authorization') authorization?: string,
   ) {
+    console.log('🔍 DEBUG: sendEmail method called');
+    
     try {
       if (!authorization) {
         throw new HttpException('Authorization header required', HttpStatus.UNAUTHORIZED);
       }
 
+      console.log('🔍 DEBUG: Sending email to:', sendEmailDto.recipient);
+
       const result = await firstValueFrom(
         this.notificationServiceClient.send('email.send', sendEmailDto),
       );
+
+      console.log('🔍 DEBUG: Email result:', result);
 
       if (!result.success) {
         throw new HttpException(
@@ -221,6 +260,8 @@ export class NotificationsController {
         data: result.data,
       };
     } catch (error) {
+      console.log('🔍 DEBUG: sendEmail error:', error.message);
+      
       if (error instanceof HttpException) {
         throw error;
       }
@@ -239,6 +280,8 @@ export class NotificationsController {
     @Param('orderId') orderId: string,
     @Headers('authorization') authorization?: string,
   ) {
+    console.log('🔍 DEBUG: resendTickets method called for order:', orderId);
+    
     try {
       if (!authorization) {
         throw new HttpException('Authorization header required', HttpStatus.UNAUTHORIZED);
@@ -249,6 +292,8 @@ export class NotificationsController {
           orderId,
         }),
       );
+
+      console.log('🔍 DEBUG: Ticket resend result:', result);
 
       if (!result.success) {
         throw new HttpException(
@@ -262,6 +307,8 @@ export class NotificationsController {
         data: result.data,
       };
     } catch (error) {
+      console.log('🔍 DEBUG: resendTickets error:', error.message);
+      
       if (error instanceof HttpException) {
         throw error;
       }
@@ -277,23 +324,31 @@ export class NotificationsController {
   @ApiOperation({ summary: 'Get notification analytics (Admin)' })
   @ApiResponse({ status: 200, description: 'Analytics retrieved successfully' })
   async getAnalytics(@Headers('authorization') authorization?: string) {
+    console.log('🔍 DEBUG: getAnalytics method called');
+    
     try {
       if (!authorization) {
         throw new HttpException('Authorization header required', HttpStatus.UNAUTHORIZED);
       }
 
       // For now, return static data (following the same pattern)
+      const analyticsData = {
+        message: 'Analytics endpoint working',
+        timestamp: new Date().toISOString(),
+        totalNotifications: 0,
+        sentToday: 0,
+        successRate: 100,
+      };
+
+      console.log('🔍 DEBUG: Analytics data:', analyticsData);
+
       return {
         message: 'Analytics retrieved successfully',
-        data: {
-          message: 'Analytics endpoint working',
-          timestamp: new Date().toISOString(),
-          totalNotifications: 0,
-          sentToday: 0,
-          successRate: 100,
-        },
+        data: analyticsData,
       };
     } catch (error) {
+      console.log('🔍 DEBUG: getAnalytics error:', error.message);
+      
       if (error instanceof HttpException) {
         throw error;
       }
@@ -304,3 +359,6 @@ export class NotificationsController {
     }
   }
 }
+
+console.log('🔍 DEBUG: NotificationsController class definition completed');
+console.log('🔍 DEBUG: NotificationsController export:', NotificationsController);

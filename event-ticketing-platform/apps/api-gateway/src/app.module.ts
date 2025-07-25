@@ -1,6 +1,6 @@
 // =====================================================
 // apps/api-gateway/src/app.module.ts
-// TESTING - Direct controller import
+// FIXED - Removed console.log from imports array
 // =====================================================
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
@@ -11,9 +11,10 @@ import { TicketsModule } from './tickets/tickets.module';
 import { OrdersModule } from './orders/orders.module';
 import { TestModule } from './test/test.module';
 import { PaymentsModule } from './payments/payments.module';
-// import { NotificationsModule } from './notifications/notifications.module'; // ← Comment out
-import { NotificationsController } from './notifications/notifications.controller'; // ← Add direct import
+import { NotificationsModule } from './notifications/notifications.module';
 import { MicroserviceClientModule } from './common/microservice-client.module';
+
+console.log('🔍 DEBUG: Loading NotificationsModule...', NotificationsModule); // ✅ Outside the decorator
 
 @Module({
   imports: [
@@ -29,8 +30,12 @@ import { MicroserviceClientModule } from './common/microservice-client.module';
     OrdersModule,
     TestModule,
     PaymentsModule,
-    // NotificationsModule, // ← Comment out
+    NotificationsModule, // ✅ Clean import, no console.log here
   ],
-  controllers: [NotificationsController], // ← Add direct controller here
 })
-export class AppModule {}
+export class AppModule {
+  constructor() {
+    console.log('🔍 DEBUG: AppModule constructor called');
+    console.log('🔍 DEBUG: NotificationsModule loaded:', !!NotificationsModule); // ✅ In constructor
+  }
+}
