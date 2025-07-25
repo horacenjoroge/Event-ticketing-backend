@@ -1,6 +1,6 @@
 // apps/order-service/src/order-service.module.ts
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { DatabaseModule } from './database/database.module';
 import { CartController } from './cart/cart.controller';
@@ -21,42 +21,55 @@ import { CompensationService } from './saga/compensation.service';
     ClientsModule.registerAsync([
       {
         name: 'TICKET_SERVICE',
-        useFactory: () => ({
+        imports: [ConfigModule],
+        useFactory: async (configService: ConfigService) => ({
           transport: Transport.RMQ,
           options: {
-            urls: [process.env.RABBITMQ_URL || 'amqp://admin:admin123@rabbitmq:5672'],
+            urls: [
+              configService.get<string>('RABBITMQ_URL') ||
+                'amqp://admin:admin123@rabbitmq:5672',
+            ],
             queue: 'ticket_queue',
             queueOptions: {
               durable: false,
             },
           },
         }),
+        inject: [ConfigService],
       },
       {
         name: 'PAYMENT_SERVICE',
-        useFactory: () => ({
+        imports: [ConfigModule],
+        useFactory: async (configService: ConfigService) => ({
           transport: Transport.RMQ,
           options: {
-            urls: [process.env.RABBITMQ_URL || 'amqp://admin:admin123@rabbitmq:5672'],
+            urls: [
+              configService.get<string>('RABBITMQ_URL') ||
+                'amqp://admin:admin123@rabbitmq:5672',
+            ],
             queue: 'payment_queue',
             queueOptions: {
               durable: false,
             },
           },
         }),
+        inject: [ConfigService],
       },
       {
         name: 'NOTIFICATION_SERVICE',
-        useFactory: () => ({
+        imports: [ConfigModule],
+        useFactory: async (configService: ConfigService) => ({
           transport: Transport.RMQ,
           options: {
-            urls: [process.env.RABBITMQ_URL || 'amqp://admin:admin123@rabbitmq:5672'],
+            urls: [
+              configService.get<string>('RABBITMQ_URL') ||
+                'amqp://admin:admin123@rabbitmq:5672',
+            ],
             queue: 'notification_queue',
-            queueOptions: {
-              durable: false,
-            },
+            // ← Removed queueOptions - let notification service create the queue
           },
         }),
+        inject: [ConfigService],
       },
     ]),
   ],
