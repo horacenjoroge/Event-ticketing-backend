@@ -79,36 +79,29 @@ export class UsersController {
   // ← NEW METHOD: Handle profile requests from API Gateway
   @MessagePattern('user.get-profile')
   async getProfile(@Payload() data: { authorization: string }) {
+    console.log('🔥 RECEIVED user.get-profile request:', data);
     try {
       if (!data.authorization) {
-        return {
-          success: false,
-          error: 'Authorization header required',
-        };
+        console.log('❌ No authorization header');
+        return { success: false, error: 'Authorization header required' };
       }
-
-      // Extract token from "Bearer <token>"
-      const token = data.authorization.replace('Bearer ', '');
       
-      // Validate token and get user
+      const token = data.authorization.replace('Bearer ', '');
+      console.log('🔑 Extracted token:', token.substring(0, 20) + '...');
+      
       const user = await this.usersService.validateToken(token);
+      console.log('👤 User validation result:', !!user);
       
       if (!user) {
-        return {
-          success: false,
-          error: 'Invalid or expired token',
-        };
+        console.log('❌ Invalid token');
+        return { success: false, error: 'Invalid or expired token' };
       }
-
-      return {
-        success: true,
-        data: user,
-      };
+      
+      console.log('✅ Returning user profile');
+      return { success: true, data: user };
     } catch (error) {
-      return {
-        success: false,
-        error: error.message,
-      };
+      console.log('💥 Handler error:', error.message);
+      return { success: false, error: error.message };
     }
   }
 }

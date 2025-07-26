@@ -46,19 +46,35 @@ export class AuthController {
 
   @MessagePattern('auth.validate-token')
   async validateToken(@Payload() data: { token: string }) {
+    console.log('🔥 AUTH CONTROLLER: Received auth.validate-token request:', JSON.stringify(data));
+    console.log('🔥 AUTH CONTROLLER: Token length:', data.token?.length || 'undefined');
+    
     try {
+      console.log('🔥 AUTH CONTROLLER: Calling authService.validateToken...');
       const user = await this.authService.validateToken(data.token);
-      return {
+      console.log('🔥 AUTH CONTROLLER: Auth service returned:', user ? 'User found' : 'User not found');
+      console.log('🔥 AUTH CONTROLLER: User details:', user ? { id: user.id, email: user.email } : 'null');
+      
+      const response = {
         success: !!user,
         data: user,
         message: user ? 'Token is valid' : 'Invalid token',
       };
+      
+      console.log('🔥 AUTH CONTROLLER: Returning response:', { success: response.success, message: response.message });
+      return response;
     } catch (error) {
-      return {
+      console.log('🔥 AUTH CONTROLLER: Exception in validateToken:', error.message);
+      console.log('🔥 AUTH CONTROLLER: Exception stack:', error.stack);
+      
+      const errorResponse = {
         success: false,
         error: error.message,
         message: 'Token validation failed',
       };
+      
+      console.log('🔥 AUTH CONTROLLER: Returning error response:', errorResponse);
+      return errorResponse;
     }
   }
 }

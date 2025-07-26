@@ -13,7 +13,7 @@ import { firstValueFrom } from 'rxjs';
 import { IsEmail, IsString, MinLength, IsEnum, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-// Simple DTOs - just for HTTP validation
+// DTOs
 export class RegisterDto {
   @ApiProperty({ example: 'john@example.com' })
   @IsEmail()
@@ -61,7 +61,8 @@ export class AuthController {
   @ApiResponse({ status: 409, description: 'User already exists' })
   async register(@Body() registerDto: RegisterDto) {
     try {
-      // Just forward to User Service - no auth logic here
+      console.log('🔥 AUTH: Forwarding registration to User Service...');
+      
       const result = await firstValueFrom(
         this.userServiceClient.send('auth.register', registerDto),
       );
@@ -73,6 +74,7 @@ export class AuthController {
         );
       }
 
+      console.log('🔥 AUTH: Registration successful');
       return {
         message: result.message,
         user: result.data.user,
@@ -95,7 +97,8 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async login(@Body() loginDto: LoginDto) {
     try {
-      // Just forward to User Service - no auth logic here
+      console.log('🔥 AUTH: Forwarding login to User Service...');
+      
       const result = await firstValueFrom(
         this.userServiceClient.send('auth.login', loginDto),
       );
@@ -107,6 +110,7 @@ export class AuthController {
         );
       }
 
+      console.log('🔥 AUTH: Login successful');
       return {
         message: result.message,
         user: result.data.user,

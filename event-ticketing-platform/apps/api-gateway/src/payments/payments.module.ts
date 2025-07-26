@@ -5,8 +5,9 @@ import { MicroserviceClientModule } from '../common/microservice-client.module';
 
 @Module({
   imports: [
-    MicroserviceClientModule,  // ← Uses your centralized client configuration
+    MicroserviceClientModule,  // Need both PAYMENT_SERVICE and USER_SERVICE
   ],
   controllers: [PaymentsController],
+  // No AuthModule import needed
 })
 export class PaymentsModule {}

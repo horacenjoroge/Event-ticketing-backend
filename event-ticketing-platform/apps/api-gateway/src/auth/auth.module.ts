@@ -5,8 +5,9 @@ import { MicroserviceClientModule } from '../common/microservice-client.module';
 
 @Module({
   imports: [
-    MicroserviceClientModule,  // ← Just need RabbitMQ client
+    MicroserviceClientModule,  // Only need RabbitMQ client for USER_SERVICE
   ],
   controllers: [AuthController],
+  // No providers needed - no JWT Guard, no local auth logic
 })
 export class AuthModule {}

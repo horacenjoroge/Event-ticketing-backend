@@ -2,15 +2,13 @@
 import {
   Controller,
   Get,
-  HttpException,
-  HttpStatus,
+  Headers,
+  UnauthorizedException,
   Inject,
-  UseGuards,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { GetUser } from '../auth/get-user.decorator';
+import { firstValueFrom } from 'rxjs';
 
 @ApiTags('Users')
 @Controller('users')
@@ -19,24 +17,43 @@ export class UsersController {
     @Inject('USER_SERVICE') private readonly userServiceClient: ClientProxy,
   ) {}
 
+  // Helper method to validate authentication
+  private async validateAuth(authHeader: string) {
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new UnauthorizedException('No valid authorization token provided');
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    console.log('🔥 USERS: Validating token with User Service...');
+
+    const authResult = await firstValueFrom(
+      this.userServiceClient.send('auth.validate-token', { token })
+    );
+
+    if (!authResult.success) {
+      console.log('🔥 USERS: Token validation failed:', authResult.message);
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+
+    console.log('🔥 USERS: Token validation successful for user:', authResult.data.email);
+    return authResult.data;
+  }
+
   @Get('profile')
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current user profile' })
   @ApiResponse({ status: 200, description: 'Profile retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getProfile(@GetUser() user: any) {
-    try {
-      // No need for manual auth validation - user is already validated by the guard
-      return {
-        message: 'Profile retrieved successfully',
-        user: user,
-      };
-    } catch (error) {
-      throw new HttpException(
-        'Internal server error',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+  async getProfile(@Headers('authorization') authHeader: string) {
+    // Validate authentication and get user data directly
+    const user = await this.validateAuth(authHeader);
+
+    return {
+      message: 'Profile retrieved successfully',
+      user: {
+        ...user,
+        userId: user.id, // For backward compatibility
+      },
+    };
   }
 }
