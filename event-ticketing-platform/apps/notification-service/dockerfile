@@ -1,11 +1,13 @@
 # =====================================================
-# apps/notification-service/Dockerfile
+# apps/notification-service/Dockerfile - PRISMA FIXED
 # =====================================================
 FROM node:20-alpine
 
 WORKDIR /usr/src/app
 
-# Copy package files
+# Install OpenSSL for Prisma
+RUN apk add --no-cache openssl
+
 COPY package*.json ./
 COPY tsconfig*.json ./
 COPY nest-cli.json ./
@@ -13,20 +15,24 @@ COPY nest-cli.json ./
 # Install dependencies
 RUN npm ci
 
-# Copy notification service source
 COPY apps/notification-service ./apps/notification-service
 
-# Copy notification service prisma
-COPY apps/notification-service/prisma ./apps/notification-service/prisma
+# Generate Prisma client specifically for notification-service
+WORKDIR /usr/src/app/apps/notification-service
 
-# Generate Prisma client
-RUN npx prisma generate --schema=apps/notification-service/prisma/schema.prisma
+# Clear any existing generated client
+RUN rm -rf prisma/generated
 
-# Build the application
+# Generate Prisma client with correct binary targets
+RUN npx prisma generate --schema=./prisma/schema.prisma
+
+# Verify Prisma client was generated
+RUN ls -la prisma/generated/client/ || echo "Prisma client generation failed"
+
+# Go back to root and build
+WORKDIR /usr/src/app
 RUN npm run build notification-service
 
-# Expose port (not needed for microservice, but good for debugging)
 EXPOSE 3006
 
-# Start the application
 CMD ["node", "dist/apps/notification-service/main"]

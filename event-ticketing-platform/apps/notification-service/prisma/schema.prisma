@@ -1,8 +1,11 @@
+// =====================================================
 // apps/notification-service/prisma/schema.prisma
+// FIXED VERSION for Alpine Linux + Docker
+// =====================================================
 generator client {
   provider      = "prisma-client-js"
-  output        = "./generated/prisma"
-  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+  output        = "./generated/client"
+  binaryTargets = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -88,8 +91,8 @@ model Notification {
   
   // Relationships
   template        NotificationTemplate? @relation(fields: [templateId], references: [id])
-  events          NotificationEvent[]   // ← ADDED: One notification can have many events
-  queueItems      NotificationQueue[]   // ← ADDED: One notification can have many queue items
+  events          NotificationEvent[]
+  queueItems      NotificationQueue[]
   
   @@map("notifications")
 }
