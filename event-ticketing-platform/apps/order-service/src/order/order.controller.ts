@@ -2,6 +2,7 @@
 import { Controller, Logger } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { OrderService } from './order.service';
+import {  errors  } from '@app/common';
 
 interface CreateOrderPayload {
   userId: string;
@@ -54,6 +55,14 @@ export class OrderController {
       };
     } catch (error) {
       this.logger.error(`Failed to create order: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'order-service', 
+        error_type: 'order_create_failed', 
+        route: 'order.create' 
+      });
+      
       return {
         success: false,
         error: error.message,
@@ -76,6 +85,14 @@ export class OrderController {
       };
     } catch (error) {
       this.logger.error(`Failed to find order: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'order-service', 
+        error_type: 'order_find_by_id_failed', 
+        route: 'order.find-by-id' 
+      });
+      
       return {
         success: false,
         error: error.message,
@@ -98,6 +115,14 @@ export class OrderController {
       };
     } catch (error) {
       this.logger.error(`Failed to find orders: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'order-service', 
+        error_type: 'order_find_by_user_failed', 
+        route: 'order.find-by-user' 
+      });
+      
       return {
         success: false,
         error: error.message,
@@ -124,6 +149,14 @@ export class OrderController {
       };
     } catch (error) {
       this.logger.error(`Failed to update order status: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'order-service', 
+        error_type: 'order_update_status_failed', 
+        route: 'order.update-status' 
+      });
+      
       return {
         success: false,
         error: error.message,
@@ -146,6 +179,14 @@ export class OrderController {
       };
     } catch (error) {
       this.logger.error(`Failed to cancel order: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'order-service', 
+        error_type: 'order_cancel_failed', 
+        route: 'order.cancel' 
+      });
+      
       return {
         success: false,
         error: error.message,
@@ -168,6 +209,14 @@ export class OrderController {
       };
     } catch (error) {
       this.logger.error(`Failed to complete order: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'order-service', 
+        error_type: 'order_complete_failed', 
+        route: 'order.complete' 
+      });
+      
       return {
         success: false,
         error: error.message,
@@ -190,6 +239,14 @@ export class OrderController {
       };
     } catch (error) {
       this.logger.error(`Failed to get order analytics: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'order-service', 
+        error_type: 'order_analytics_failed', 
+        route: 'order.analytics' 
+      });
+      
       return {
         success: false,
         error: error.message,
@@ -222,6 +279,14 @@ export class OrderController {
       };
     } catch (error) {
       this.logger.error(`Failed to add order event: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'order-service', 
+        error_type: 'order_add_event_failed', 
+        route: 'order.add-event' 
+      });
+      
       return {
         success: false,
         error: error.message,

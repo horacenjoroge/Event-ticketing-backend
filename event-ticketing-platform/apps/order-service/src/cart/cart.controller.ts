@@ -2,6 +2,7 @@
 import { Controller, Logger } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { CartService } from './cart.service';
+import { errors } from '@app/common';
 
 interface AddToCartPayload {
   userId: string;
@@ -47,6 +48,14 @@ export class CartController {
       };
     } catch (error) {
       this.logger.error(`Failed to get cart: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'order-service', 
+        error_type: 'cart_get_failed', 
+        route: 'cart.get' 
+      });
+      
       return {
         success: false,
         error: error.message,
@@ -69,6 +78,14 @@ export class CartController {
       };
     } catch (error) {
       this.logger.error(`Failed to add item to cart: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'order-service', 
+        error_type: 'cart_add_item_failed', 
+        route: 'cart.add-item' 
+      });
+      
       return {
         success: false,
         error: error.message,
@@ -95,6 +112,14 @@ export class CartController {
       };
     } catch (error) {
       this.logger.error(`Failed to update cart item: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'order-service', 
+        error_type: 'cart_update_item_failed', 
+        route: 'cart.update-item' 
+      });
+      
       return {
         success: false,
         error: error.message,
@@ -117,6 +142,14 @@ export class CartController {
       };
     } catch (error) {
       this.logger.error(`Failed to remove item from cart: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'order-service', 
+        error_type: 'cart_remove_item_failed', 
+        route: 'cart.remove-item' 
+      });
+      
       return {
         success: false,
         error: error.message,
@@ -139,6 +172,14 @@ export class CartController {
       };
     } catch (error) {
       this.logger.error(`Failed to clear cart: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'order-service', 
+        error_type: 'cart_clear_failed', 
+        route: 'cart.clear' 
+      });
+      
       return {
         success: false,
         error: error.message,
@@ -161,6 +202,14 @@ export class CartController {
       };
     } catch (error) {
       this.logger.error(`Failed to calculate cart total: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'order-service', 
+        error_type: 'cart_total_failed', 
+        route: 'cart.get-total' 
+      });
+      
       return {
         success: false,
         error: error.message,

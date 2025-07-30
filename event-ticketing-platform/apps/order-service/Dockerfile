@@ -7,7 +7,9 @@ COPY tsconfig*.json ./
 COPY nest-cli.json ./
 RUN npm ci
 
+# Copy the service and libs (THIS WAS MISSING!)
 COPY apps/order-service ./apps/order-service
+COPY libs ./libs
 
 # Generate Prisma client specifically for order-service
 WORKDIR /usr/src/app/apps/order-service

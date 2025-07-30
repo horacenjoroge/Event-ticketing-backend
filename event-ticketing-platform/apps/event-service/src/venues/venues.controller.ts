@@ -7,6 +7,7 @@ import {
   UpdateVenueDto,
   VenueSearchDto,
 } from './dto/venue.dto';
+import { errors } from '@app/common';
 
 @Controller()
 export class VenuesController {
@@ -23,6 +24,13 @@ export class VenuesController {
         message: 'Venue created successfully',
       };
     } catch (error) {
+      // Track error metric
+      errors.inc({ 
+        service: 'event-service', 
+        error_type: 'venue_create_failed', 
+        route: 'venue.create' 
+      });
+      
       return {
         success: false,
         error: error.message,
@@ -42,6 +50,13 @@ export class VenuesController {
         message: 'Venues retrieved successfully',
       };
     } catch (error) {
+      // Track error metric
+      errors.inc({ 
+        service: 'event-service', 
+        error_type: 'venue_find_all_failed', 
+        route: 'venue.find-all' 
+      });
+      
       return {
         success: false,
         error: error.message,
@@ -61,6 +76,13 @@ export class VenuesController {
         message: 'Venue retrieved successfully',
       };
     } catch (error) {
+      // Track error metric
+      errors.inc({ 
+        service: 'event-service', 
+        error_type: 'venue_find_by_id_failed', 
+        route: 'venue.find-by-id' 
+      });
+      
       return {
         success: false,
         error: error.message,
@@ -80,6 +102,13 @@ export class VenuesController {
         message: 'Venue updated successfully',
       };
     } catch (error) {
+      // Track error metric
+      errors.inc({ 
+        service: 'event-service', 
+        error_type: 'venue_update_failed', 
+        route: 'venue.update' 
+      });
+      
       return {
         success: false,
         error: error.message,
@@ -99,6 +128,13 @@ export class VenuesController {
         message: 'Venue deleted successfully',
       };
     } catch (error) {
+      // Track error metric
+      errors.inc({ 
+        service: 'event-service', 
+        error_type: 'venue_delete_failed', 
+        route: 'venue.delete' 
+      });
+      
       return {
         success: false,
         error: error.message,

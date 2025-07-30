@@ -1,5 +1,5 @@
 // apps/order-service/src/order-service.module.ts
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { DatabaseModule } from './database/database.module';
@@ -10,12 +10,17 @@ import { OrderService } from './order/order.service';
 import { SagaController } from './saga/saga.controller';
 import { SagaService } from './saga/saga.service';
 import { CompensationService } from './saga/compensation.service';
+import { PrometheusMiddleware, MetricsController } from '@app/common';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['../../.env'],
+      envFilePath: [
+        '../../.env',
+        '.env',
+        '.env.local',
+      ],
     }),
     DatabaseModule,
     ClientsModule.registerAsync([
@@ -66,14 +71,24 @@ import { CompensationService } from './saga/compensation.service';
                 'amqp://admin:admin123@rabbitmq:5672',
             ],
             queue: 'notification_queue',
-            // ← Removed queueOptions - let notification service create the queue
           },
         }),
         inject: [ConfigService],
       },
     ]),
   ],
-  controllers: [CartController, OrderController, SagaController],
+  controllers: [
+    CartController, 
+    OrderController, 
+    SagaController,
+    MetricsController, // Add metrics controller from @app/common
+  ],
   providers: [CartService, OrderService, SagaService, CompensationService],
 })
-export class OrderServiceModule {}
+export class OrderServiceModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(PrometheusMiddleware)
+      .forRoutes('*');
+  }
+}
