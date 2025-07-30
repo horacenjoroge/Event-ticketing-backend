@@ -3,6 +3,7 @@ import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto, UpdateCategoryDto, CategorySearchDto } from './dto/category.dto';
+import { errors } from '@app/common';
 
 @Controller()
 export class CategoriesController {
@@ -19,6 +20,13 @@ export class CategoriesController {
         message: 'Category created successfully',
       };
     } catch (error) {
+      // Track error metric
+      errors.inc({ 
+        service: 'event-service', 
+        error_type: 'category_create_failed', 
+        route: 'category.create' 
+      });
+      
       return {
         success: false,
         error: error.message,
@@ -38,6 +46,13 @@ export class CategoriesController {
         message: 'Categories retrieved successfully',
       };
     } catch (error) {
+      // Track error metric
+      errors.inc({ 
+        service: 'event-service', 
+        error_type: 'category_find_all_failed', 
+        route: 'category.find-all' 
+      });
+      
       return {
         success: false,
         error: error.message,
@@ -57,6 +72,13 @@ export class CategoriesController {
         message: 'Category retrieved successfully',
       };
     } catch (error) {
+      // Track error metric
+      errors.inc({ 
+        service: 'event-service', 
+        error_type: 'category_find_by_id_failed', 
+        route: 'category.find-by-id' 
+      });
+      
       return {
         success: false,
         error: error.message,
@@ -76,6 +98,13 @@ export class CategoriesController {
         message: 'Category updated successfully',
       };
     } catch (error) {
+      // Track error metric
+      errors.inc({ 
+        service: 'event-service', 
+        error_type: 'category_update_failed', 
+        route: 'category.update' 
+      });
+      
       return {
         success: false,
         error: error.message,
@@ -95,6 +124,13 @@ export class CategoriesController {
         message: 'Category deleted successfully',
       };
     } catch (error) {
+      // Track error metric
+      errors.inc({ 
+        service: 'event-service', 
+        error_type: 'category_delete_failed', 
+        route: 'category.delete' 
+      });
+      
       return {
         success: false,
         error: error.message,
