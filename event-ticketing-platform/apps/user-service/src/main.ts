@@ -1,4 +1,6 @@
-// apps/user-service/src/main.ts
+// =====================================================
+// apps/user-service/src/main.ts (UPDATED)
+// =====================================================
 import { NestFactory } from '@nestjs/core';
 import { Transport, MicroserviceOptions } from '@nestjs/microservices';
 import { UserServiceModule } from './user-service.module';
@@ -32,17 +34,30 @@ async function bootstrap() {
     },
   );
 
-  // Global validation pipe
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      transform: true,
-      forbidNonWhitelisted: true,
-    }),
-  );
+  // Also create HTTP server for metrics endpoint
+  const httpApp = await NestFactory.create(UserServiceModule);
+  
+  // Global validation pipe for both apps
+  const validationPipe = new ValidationPipe({
+    whitelist: true,
+    transform: true,
+    forbidNonWhitelisted: true,
+  });
 
+  app.useGlobalPipes(validationPipe);
+  httpApp.useGlobalPipes(validationPipe);
+
+  // Start microservice
   await app.listen();
+  
+  // Start HTTP server for metrics
+  const httpPort = process.env.USER_SERVICE_PORT || 3001;
+  await httpApp.listen(httpPort);
+
   logger.log('User microservice is listening...');
+  logger.log(`HTTP server running on port ${httpPort} for metrics`);
+  logger.log(`📊 Metrics available at http://localhost:${httpPort}/metrics`);
+  logger.log(`💚 Health check at http://localhost:${httpPort}/health`);
   logger.log(
     `Database URL: ${
       configService.get<string>('DATABASE_URL') ? 'Found' : 'Not found'

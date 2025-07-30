@@ -1,11 +1,12 @@
 // =====================================================
-// apps/user-service/src/auth/auth.controller.ts  
-// ENHANCED for debugging your microservice approach
+// apps/user-service/src/auth/auth.controller.ts
+// ENHANCED for debugging your microservice approach + Prometheus metrics
 // =====================================================
 import { Controller, Logger } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { AuthService } from './auth.service';
 import { CreateUserDto, LoginDto } from '../users/dto/create-user.dto';
+import { usersRegistered, errors } from '@app/common';
 
 @Controller()
 export class AuthController {
@@ -18,11 +19,14 @@ export class AuthController {
   @MessagePattern('auth.register')
   async register(@Payload() createUserDto: CreateUserDto) {
     this.logger.log(`📝 USER SERVICE: Registration request for ${createUserDto.email}`);
-    
+        
     try {
       const result = await this.authService.register(createUserDto);
       this.logger.log(`✅ USER SERVICE: Registration successful for ${createUserDto.email}`);
       
+      // Track business metric
+      usersRegistered.inc({ service: 'user-service' });
+            
       return {
         success: true,
         data: result,
@@ -31,6 +35,13 @@ export class AuthController {
     } catch (error) {
       this.logger.error(`❌ USER SERVICE: Registration failed for ${createUserDto.email}: ${error.message}`);
       
+      // Track error metric
+      errors.inc({ 
+        service: 'user-service', 
+        error_type: 'registration_failed', 
+        route: 'auth.register' 
+      });
+            
       return {
         success: false,
         error: error.message,
@@ -42,12 +53,12 @@ export class AuthController {
   @MessagePattern('auth.login')
   async login(@Payload() loginDto: LoginDto) {
     this.logger.log(`🔑 USER SERVICE: Login request for ${loginDto.email}`);
-    
+        
     try {
       const result = await this.authService.login(loginDto);
       this.logger.log(`✅ USER SERVICE: Login successful for ${loginDto.email}`);
       this.logger.log(`🔑 TOKEN CREATED: Length ${result.access_token.length} chars`);
-      
+            
       return {
         success: true,
         data: result,
@@ -56,6 +67,13 @@ export class AuthController {
     } catch (error) {
       this.logger.error(`❌ USER SERVICE: Login failed for ${loginDto.email}: ${error.message}`);
       
+      // Track error metric
+      errors.inc({ 
+        service: 'user-service', 
+        error_type: 'login_failed', 
+        route: 'auth.login' 
+      });
+            
       return {
         success: false,
         error: error.message,
@@ -68,9 +86,17 @@ export class AuthController {
   async validateToken(@Payload() data: { token: string }) {
     this.logger.log('🔍 USER SERVICE: Token validation request received');
     this.logger.log(`🔍 Token provided: ${data.token ? 'YES' : 'NO'}`);
-    
+        
     if (!data.token) {
       this.logger.error('❌ USER SERVICE: No token provided in validation request');
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'user-service', 
+        error_type: 'token_missing', 
+        route: 'auth.validate-token' 
+      });
+      
       return {
         success: false,
         error: 'No token provided',
@@ -84,11 +110,11 @@ export class AuthController {
     try {
       this.logger.log('🔍 USER SERVICE: Calling authService.validateToken...');
       const user = await this.authService.validateToken(data.token);
-      
+            
       if (user) {
         this.logger.log(`✅ USER SERVICE: Token validation successful for user: ${user.email}`);
         this.logger.log(`✅ User data: ID=${user.id}, Role=${user.role}`);
-        
+                
         return {
           success: true,
           data: user,
@@ -96,6 +122,14 @@ export class AuthController {
         };
       } else {
         this.logger.warn('❌ USER SERVICE: Token validation failed - invalid token or user not found');
+        
+        // Track error metric
+        errors.inc({ 
+          service: 'user-service', 
+          error_type: 'token_invalid', 
+          route: 'auth.validate-token' 
+        });
+        
         return {
           success: false,
           error: 'Invalid token',
@@ -106,6 +140,13 @@ export class AuthController {
       this.logger.error(`❌ USER SERVICE: Exception during token validation: ${error.message}`);
       this.logger.error(`❌ Error stack:`, error.stack);
       
+      // Track error metric
+      errors.inc({ 
+        service: 'user-service', 
+        error_type: 'token_validation_error', 
+        route: 'auth.validate-token' 
+      });
+            
       return {
         success: false,
         error: error.message,
