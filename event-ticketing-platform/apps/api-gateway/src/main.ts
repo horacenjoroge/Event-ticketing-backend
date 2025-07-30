@@ -1,4 +1,6 @@
-// apps/api-gateway/src/main.ts
+// =====================================================
+// apps/api-gateway/src/main.ts (UPDATED)
+// =====================================================
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
@@ -29,16 +31,19 @@ async function bootstrap() {
     .setDescription('API for event ticketing platform')
     .setVersion('1.0')
     .addBearerAuth()
+    .addTag('Monitoring', 'Health checks and metrics')
     .build();
-  
+
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
   const port = process.env.API_GATEWAY_PORT || 3000;
   await app.listen(port);
-  
+
   console.log(`🚀 API Gateway running on http://localhost:${port}`);
   console.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
+  console.log(`📊 Metrics available at http://localhost:${port}/metrics`);
+  console.log(`💚 Health check at http://localhost:${port}/health`);
 }
 
 bootstrap();

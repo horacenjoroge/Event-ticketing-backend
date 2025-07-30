@@ -1,8 +1,7 @@
 // =====================================================
-// apps/api-gateway/src/app.module.ts
-// FIXED - Removed console.log from imports array
+// apps/api-gateway/src/app.module.ts (UPDATED)
 // =====================================================
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
@@ -13,8 +12,9 @@ import { TestModule } from './test/test.module';
 import { PaymentsModule } from './payments/payments.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { MicroserviceClientModule } from './common/microservice-client.module';
+import { PrometheusMiddleware, MetricsController } from '@app/common';
 
-console.log('🔍 DEBUG: Loading NotificationsModule...', NotificationsModule); // ✅ Outside the decorator
+console.log('🔍 DEBUG: Loading NotificationsModule...', NotificationsModule);
 
 @Module({
   imports: [
@@ -30,12 +30,19 @@ console.log('🔍 DEBUG: Loading NotificationsModule...', NotificationsModule); 
     OrdersModule,
     TestModule,
     PaymentsModule,
-    NotificationsModule, // ✅ Clean import, no console.log here
+    NotificationsModule,
   ],
+  controllers: [MetricsController], // Add metrics controller
 })
 export class AppModule {
   constructor() {
     console.log('🔍 DEBUG: AppModule constructor called');
-    console.log('🔍 DEBUG: NotificationsModule loaded:', !!NotificationsModule); // ✅ In constructor
+    console.log('🔍 DEBUG: NotificationsModule loaded:', !!NotificationsModule);
+  }
+
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(PrometheusMiddleware)
+      .forRoutes('*');
   }
 }
