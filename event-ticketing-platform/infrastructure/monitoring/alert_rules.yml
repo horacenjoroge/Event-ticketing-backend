@@ -1,0 +1,50 @@
+# =====================================================
+# infrastructure/monitoring/alert_rules.yml
+# =====================================================
+groups:
+  - name: eventify_alerts
+    rules:
+      - alert: HighErrorRate
+        expr: rate(eventify_http_requests_total{status_code=~"5.."}[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value }} for service {{ $labels.service }}"
+
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(eventify_http_request_duration_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High response time detected"
+          description: "95th percentile response time is {{ $value }}s for service {{ $labels.service }}"
+
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service is down"
+          description: "Service {{ $labels.job }} is down"
+
+      - alert: HighMemoryUsage
+        expr: (eventify_process_resident_memory_bytes / eventify_process_virtual_memory_max_bytes) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is {{ $value | humanizePercentage }} for service {{ $labels.service }}"
+
+      - alert: HighCPUUsage
+        expr: rate(eventify_process_cpu_seconds_total[5m]) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is {{ $value | humanizePercentage }} for service {{ $labels.service }}"

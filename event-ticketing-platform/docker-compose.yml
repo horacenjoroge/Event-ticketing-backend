@@ -184,6 +184,12 @@ services:
       - RABBITMQ_URL=${RABBITMQ_URL}
       - REDIS_URL=${REDIS_URL}
       - JWT_SECRET=${JWT_SECRET}
+      - SERVICE_NAME=user-service
+      - ENABLE_METRICS=true
+      - APP_VERSION=1.0.0
+      - USER_SERVICE_PORT=3001
+    ports:
+      - "3001:3001"
     depends_on:
       postgres-user:
         condition: service_healthy
@@ -210,6 +216,12 @@ services:
       - EVENT_DATABASE_URL=${EVENT_DATABASE_URL}
       - RABBITMQ_URL=${RABBITMQ_URL}
       - REDIS_URL=${REDIS_URL}
+      - SERVICE_NAME=event-service
+      - ENABLE_METRICS=true
+      - APP_VERSION=1.0.0
+      - EVENT_SERVICE_PORT=3002
+    ports:
+      - "3002:3002"
     depends_on:
       postgres-event:
         condition: service_healthy
@@ -239,6 +251,12 @@ services:
       - RESERVATION_TIMEOUT_MINUTES=${RESERVATION_TIMEOUT_MINUTES:-15}
       - MAX_TICKETS_PER_USER=${MAX_TICKETS_PER_USER:-10}
       - LOW_STOCK_THRESHOLD=${LOW_STOCK_THRESHOLD:-10}
+      - SERVICE_NAME=ticket-service
+      - ENABLE_METRICS=true
+      - APP_VERSION=1.0.0
+      - TICKET_SERVICE_PORT=3003
+    ports:
+      - "3003:3003"
     depends_on:
       postgres-ticket:
         condition: service_healthy
@@ -269,6 +287,12 @@ services:
       - MAX_CART_ITEMS=${MAX_CART_ITEMS:-20}
       - CART_EXPIRY_HOURS=${CART_EXPIRY_HOURS:-24}
       - SAGA_TIMEOUT_MINUTES=${SAGA_TIMEOUT_MINUTES:-10}
+      - SERVICE_NAME=order-service
+      - ENABLE_METRICS=true
+      - APP_VERSION=1.0.0
+      - ORDER_SERVICE_PORT=3004
+    ports:
+      - "3004:3004"
     depends_on:
       postgres-order:
         condition: service_healthy
@@ -283,7 +307,7 @@ services:
     networks:
       - microservices
 
-  # Payment Service - NOW ENABLED
+  # Payment Service
   payment-service:
     build:
       context: .
@@ -295,11 +319,9 @@ services:
       - DATABASE_URL=${PAYMENT_DATABASE_URL}
       - RABBITMQ_URL=${RABBITMQ_URL}
       - REDIS_URL=${REDIS_URL}
-      # Stripe Configuration
       - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
       - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}
       - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
-      # M-Pesa Configuration
       - MPESA_BASE_URL=${MPESA_BASE_URL}
       - MPESA_CONSUMER_KEY=${MPESA_CONSUMER_KEY}
       - MPESA_CONSUMER_SECRET=${MPESA_CONSUMER_SECRET}
@@ -308,7 +330,6 @@ services:
       - MPESA_INITIATOR_NAME=${MPESA_INITIATOR_NAME}
       - MPESA_SECURITY_CREDENTIAL=${MPESA_SECURITY_CREDENTIAL}
       - MPESA_CALLBACK_URL=${MPESA_CALLBACK_URL}
-      # Flutterwave Configuration (ADDED)
       - FLUTTERWAVE_BASE_URL=${FLUTTERWAVE_BASE_URL}
       - FLUTTERWAVE_PUBLIC_KEY=${FLUTTERWAVE_PUBLIC_KEY}
       - FLUTTERWAVE_SECRET_KEY=${FLUTTERWAVE_SECRET_KEY}
@@ -316,10 +337,15 @@ services:
       - FLUTTERWAVE_REDIRECT_URL=${FLUTTERWAVE_REDIRECT_URL}
       - FLUTTERWAVE_WEBHOOK_URL=${FLUTTERWAVE_WEBHOOK_URL}
       - FLUTTERWAVE_WEBHOOK_SECRET=${FLUTTERWAVE_WEBHOOK_SECRET}
-      # Payment Settings
       - PAYMENT_TIMEOUT_SECONDS=${PAYMENT_TIMEOUT_SECONDS:-30}
       - SUPPORTED_CURRENCIES=${SUPPORTED_CURRENCIES}
       - PLATFORM_FEE_PERCENTAGE=${PLATFORM_FEE_PERCENTAGE:-2.5}
+      - SERVICE_NAME=payment-service
+      - ENABLE_METRICS=true
+      - APP_VERSION=1.0.0
+      - PAYMENT_SERVICE_PORT=3005
+    ports:
+      - "3005:3005"
     depends_on:
       postgres-payment:
         condition: service_healthy
@@ -334,7 +360,7 @@ services:
     networks:
       - microservices
 
-  # Notification Service - NOW ENABLED
+  # Notification Service
   notification-service:
     build:
       context: .
@@ -346,20 +372,23 @@ services:
       - NOTIFICATION_DATABASE_URL=${NOTIFICATION_DATABASE_URL}
       - RABBITMQ_URL=${RABBITMQ_URL}
       - REDIS_URL=${REDIS_URL}
-      # Brevo (Sendinblue) Configuration
       - BREVO_API_KEY=${BREVO_API_KEY}
       - FROM_EMAIL=${FROM_EMAIL}
       - FROM_NAME=${FROM_NAME}
-      # SMS Configuration (Optional)
       - SMS_PROVIDER=${SMS_PROVIDER:-mock}
       - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
       - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
       - TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER}
-      # Notification Settings
       - DAILY_EMAIL_LIMIT=${DAILY_EMAIL_LIMIT:-300}
       - NOTIFICATION_QUEUE_CONCURRENCY=${NOTIFICATION_QUEUE_CONCURRENCY:-10}
       - MAX_RETRY_ATTEMPTS=${MAX_RETRY_ATTEMPTS:-3}
       - RETRY_DELAY_SECONDS=${RETRY_DELAY_SECONDS:-60}
+      - SERVICE_NAME=notification-service
+      - ENABLE_METRICS=true
+      - APP_VERSION=1.0.0
+      - NOTIFICATION_SERVICE_PORT=3006
+    ports:
+      - "3006:3006"
     depends_on:
       postgres-notification:
         condition: service_healthy
@@ -378,7 +407,7 @@ services:
   api-gateway:
     build:
       context: .
-      dockerfile: apps/api-gateway/Dockerfile
+      dockerfile: apps/api-gateway/dockerfile
     container_name: api-gateway
     env_file: .env
     environment:
@@ -389,6 +418,9 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - CORS_ORIGINS=${CORS_ORIGINS}
       - ENABLE_SWAGGER=${ENABLE_SWAGGER:-true}
+      - SERVICE_NAME=api-gateway
+      - ENABLE_METRICS=true
+      - APP_VERSION=1.0.0
     ports:
       - "${API_GATEWAY_PORT:-3000}:3000"
     depends_on:
@@ -415,6 +447,42 @@ services:
     networks:
       - microservices
 
+  # Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infrastructure/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+    networks:
+      - microservices
+    restart: unless-stopped
+
+  # Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3010:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infrastructure/monitoring/grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - microservices
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
 volumes:
   postgres_user_data:
   postgres_event_data:
@@ -424,6 +492,8 @@ volumes:
   postgres_notification_data:
   rabbitmq_data:
   redis_data:
+  prometheus_data:
+  grafana_data:
 
 networks:
   microservices:
