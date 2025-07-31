@@ -2,6 +2,7 @@
 import { Controller, Get, Logger, Inject } from '@nestjs/common';
 import { MessagePattern, Payload, ClientProxy } from '@nestjs/microservices';
 import { TicketServiceService } from './ticket-service.service';
+import { errors } from '@app/common';
 
 @Controller()
 export class TicketServiceController {
@@ -62,6 +63,13 @@ export class TicketServiceController {
     } catch (error) {
       this.logger.error(`Failed to reserve tickets: ${error.message}`, error.stack);
 
+      // Track error metric
+      errors.inc({ 
+        service: 'ticket-service', 
+        error_type: 'ticket_reserve_failed', 
+        route: 'ticket.reserve' 
+      });
+
       // Send failure back to saga orchestrator
       this.orderClient.emit('saga.step.failed', {
         sagaExecutionId: payload.sagaExecutionId,
@@ -111,6 +119,13 @@ export class TicketServiceController {
     } catch (error) {
       this.logger.error(`Failed to confirm tickets: ${error.message}`, error.stack);
 
+      // Track error metric
+      errors.inc({ 
+        service: 'ticket-service', 
+        error_type: 'ticket_confirm_failed', 
+        route: 'ticket.confirm' 
+      });
+
       // Send failure back to saga orchestrator
       this.orderClient.emit('saga.step.failed', {
         sagaExecutionId: payload.sagaExecutionId,
@@ -159,6 +174,13 @@ export class TicketServiceController {
       };
     } catch (error) {
       this.logger.error(`Failed to release tickets: ${error.message}`, error.stack);
+
+      // Track error metric
+      errors.inc({ 
+        service: 'ticket-service', 
+        error_type: 'ticket_release_failed', 
+        route: 'ticket.release' 
+      });
 
       return {
         success: false,

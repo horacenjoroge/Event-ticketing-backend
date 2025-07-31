@@ -1,5 +1,5 @@
 // apps/ticket-service/src/ticket-types/ticket-types.controller.ts
-import { Controller } from '@nestjs/common';
+import { Controller, Logger } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { TicketTypesService } from './ticket-types.service';
 import { 
@@ -7,9 +7,12 @@ import {
   UpdateTicketTypeDto, 
   TicketTypeSearchDto 
 } from './dto/ticket-type.dto';
+import { errors } from '@app/common';
 
 @Controller()
 export class TicketTypesController {
+  private readonly logger = new Logger(TicketTypesController.name);
+
   constructor(private readonly ticketTypesService: TicketTypesService) {}
 
   @MessagePattern('ticket-type.create')
@@ -29,6 +32,15 @@ export class TicketTypesController {
         message: 'Ticket type created successfully',
       };
     } catch (error) {
+      this.logger.error(`Failed to create ticket type: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'ticket-service', 
+        error_type: 'ticket_type_create_failed', 
+        route: 'ticket-type.create' 
+      });
+      
       return {
         success: false,
         error: error.message,
@@ -48,6 +60,15 @@ export class TicketTypesController {
         message: 'Ticket types retrieved successfully',
       };
     } catch (error) {
+      this.logger.error(`Failed to retrieve ticket types: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'ticket-service', 
+        error_type: 'ticket_type_find_all_failed', 
+        route: 'ticket-type.find-all' 
+      });
+      
       return {
         success: false,
         error: error.message,
@@ -67,6 +88,15 @@ export class TicketTypesController {
         message: 'Event ticket types retrieved successfully',
       };
     } catch (error) {
+      this.logger.error(`Failed to retrieve event ticket types: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'ticket-service', 
+        error_type: 'ticket_type_find_by_event_failed', 
+        route: 'ticket-type.find-by-event' 
+      });
+      
       return {
         success: false,
         error: error.message,
@@ -86,6 +116,15 @@ export class TicketTypesController {
         message: 'Ticket type retrieved successfully',
       };
     } catch (error) {
+      this.logger.error(`Failed to retrieve ticket type: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'ticket-service', 
+        error_type: 'ticket_type_find_by_id_failed', 
+        route: 'ticket-type.find-by-id' 
+      });
+      
       return {
         success: false,
         error: error.message,
@@ -113,6 +152,15 @@ export class TicketTypesController {
         message: 'Ticket type updated successfully',
       };
     } catch (error) {
+      this.logger.error(`Failed to update ticket type: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'ticket-service', 
+        error_type: 'ticket_type_update_failed', 
+        route: 'ticket-type.update' 
+      });
+      
       return {
         success: false,
         error: error.message,
@@ -132,6 +180,15 @@ export class TicketTypesController {
         message: 'Ticket type deleted successfully',
       };
     } catch (error) {
+      this.logger.error(`Failed to delete ticket type: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'ticket-service', 
+        error_type: 'ticket_type_delete_failed', 
+        route: 'ticket-type.delete' 
+      });
+      
       return {
         success: false,
         error: error.message,
@@ -154,6 +211,15 @@ export class TicketTypesController {
         message: 'Availability checked successfully',
       };
     } catch (error) {
+      this.logger.error(`Failed to check availability: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'ticket-service', 
+        error_type: 'ticket_type_availability_failed', 
+        route: 'ticket-type.check-availability' 
+      });
+      
       return {
         success: false,
         error: error.message,

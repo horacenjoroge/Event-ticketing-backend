@@ -20,7 +20,7 @@ async function bootstrap() {
       options: {
         urls: [
           configService.get<string>('RABBITMQ_URL') ||
-            'amqp://admin:admin123@localhost:5672',
+            'amqp://admin:admin123@rabbitmq:5672',
         ],
         queue: 'ticket_queue',
         queueOptions: {
@@ -30,18 +30,30 @@ async function bootstrap() {
     },
   );
 
-  // Global validation pipe
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      transform: true,
-      forbidNonWhitelisted: true,
-    }),
-  );
+  // Also create HTTP server for metrics endpoint
+  const httpApp = await NestFactory.create(TicketServiceModule);
+  
+  // Global validation pipe for both apps
+  const validationPipe = new ValidationPipe({
+    whitelist: true,
+    transform: true,
+    forbidNonWhitelisted: true,
+  });
 
+  app.useGlobalPipes(validationPipe);
+  httpApp.useGlobalPipes(validationPipe);
+
+  // Start microservice
   await app.listen();
-  logger.log('Ticket microservice is listening...');
-  logger.log(`Service configured for port: ${configService.get<string>('TICKET_SERVICE_PORT') || '3003'}`);
+  
+  // Start HTTP server for metrics
+  const httpPort = process.env.TICKET_SERVICE_PORT || 3003;
+  await httpApp.listen(httpPort);
+
+  logger.log('Ticket Service is listening on RabbitMQ ticket_queue');
+  logger.log(`HTTP server running on port ${httpPort} for metrics`);
+  logger.log(`📊 Metrics available at http://localhost:${httpPort}/metrics`);
+  logger.log(`💚 Health check at http://localhost:${httpPort}/health`);
   logger.log(
     `Database URL: ${
       configService.get<string>('TICKET_DATABASE_URL') ? 'Found' : 'Not found'

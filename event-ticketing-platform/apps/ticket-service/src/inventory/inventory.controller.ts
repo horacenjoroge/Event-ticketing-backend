@@ -1,14 +1,17 @@
 // apps/ticket-service/src/inventory/inventory.controller.ts
-import { Controller } from '@nestjs/common';
+import { Controller, Logger } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { InventoryService } from './inventory.service';
 import { 
   CheckAvailabilityDto, 
   UpdateInventoryDto 
 } from './dto/inventory.dto';
+import { errors } from '@app/common';
 
 @Controller()
 export class InventoryController {
+  private readonly logger = new Logger(InventoryController.name);
+
   constructor(private readonly inventoryService: InventoryService) {}
 
   @MessagePattern('inventory.check-availability')
@@ -22,6 +25,15 @@ export class InventoryController {
         message: 'Availability checked successfully',
       };
     } catch (error) {
+      this.logger.error(`Failed to check availability: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'ticket-service', 
+        error_type: 'inventory_check_availability_failed', 
+        route: 'inventory.check-availability' 
+      });
+      
       return {
         success: false,
         error: error.message,
@@ -41,6 +53,15 @@ export class InventoryController {
         message: 'Inventory retrieved successfully',
       };
     } catch (error) {
+      this.logger.error(`Failed to retrieve inventory: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'ticket-service', 
+        error_type: 'inventory_get_by_ticket_type_failed', 
+        route: 'inventory.get-by-ticket-type' 
+      });
+      
       return {
         success: false,
         error: error.message,
@@ -60,6 +81,15 @@ export class InventoryController {
         message: 'Event inventories retrieved successfully',
       };
     } catch (error) {
+      this.logger.error(`Failed to retrieve event inventories: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'ticket-service', 
+        error_type: 'inventory_get_by_event_failed', 
+        route: 'inventory.get-by-event' 
+      });
+      
       return {
         success: false,
         error: error.message,
@@ -82,6 +112,15 @@ export class InventoryController {
         message: result.message,
       };
     } catch (error) {
+      this.logger.error(`Failed to reserve tickets: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'ticket-service', 
+        error_type: 'inventory_reserve_tickets_failed', 
+        route: 'inventory.reserve-tickets' 
+      });
+      
       return {
         success: false,
         error: error.message,
@@ -104,6 +143,15 @@ export class InventoryController {
         message: result.message,
       };
     } catch (error) {
+      this.logger.error(`Failed to release reservation: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'ticket-service', 
+        error_type: 'inventory_release_reservation_failed', 
+        route: 'inventory.release-reservation' 
+      });
+      
       return {
         success: false,
         error: error.message,
@@ -126,6 +174,15 @@ export class InventoryController {
         message: result.message,
       };
     } catch (error) {
+      this.logger.error(`Failed to confirm purchase: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'ticket-service', 
+        error_type: 'inventory_confirm_purchase_failed', 
+        route: 'inventory.confirm-purchase' 
+      });
+      
       return {
         success: false,
         error: error.message,
@@ -145,6 +202,15 @@ export class InventoryController {
         message: 'Low stock alerts retrieved successfully',
       };
     } catch (error) {
+      this.logger.error(`Failed to retrieve low stock alerts: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'ticket-service', 
+        error_type: 'inventory_low_stock_alerts_failed', 
+        route: 'inventory.get-low-stock-alerts' 
+      });
+      
       return {
         success: false,
         error: error.message,
@@ -164,6 +230,15 @@ export class InventoryController {
         message: 'Inventory statistics retrieved successfully',
       };
     } catch (error) {
+      this.logger.error(`Failed to retrieve inventory statistics: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'ticket-service', 
+        error_type: 'inventory_get_stats_failed', 
+        route: 'inventory.get-stats' 
+      });
+      
       return {
         success: false,
         error: error.message,
@@ -183,6 +258,15 @@ export class InventoryController {
         message: 'Inventory updated successfully',
       };
     } catch (error) {
+      this.logger.error(`Failed to update inventory: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'ticket-service', 
+        error_type: 'inventory_update_failed', 
+        route: 'inventory.update' 
+      });
+      
       return {
         success: false,
         error: error.message,
