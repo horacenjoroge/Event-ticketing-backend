@@ -1,5 +1,5 @@
 // apps/payment-service/src/payment-service.module.ts
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 
@@ -18,11 +18,18 @@ import { FlutterwaveProvider } from './providers/flutterwave.provider';
 // Database
 import { PrismaService } from './database/prisma.service';
 
+// Monitoring
+import { PrometheusMiddleware, MetricsController } from '@app/common';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['../../.env', '.env', '.env.local'],
+      envFilePath: [
+        '../../.env',
+        '.env',
+        '.env.local',
+      ],
     }),
     
     // RabbitMQ clients for communicating with other services
@@ -56,7 +63,6 @@ import { PrismaService } from './database/prisma.service';
                 'amqp://admin:admin123@rabbitmq:5672',
             ],
             queue: 'notification_queue',
-            // ← Removed queueOptions - let notification service create the queue
           },
         }),
         inject: [ConfigService],
@@ -65,6 +71,7 @@ import { PrismaService } from './database/prisma.service';
   ],
   controllers: [
     PaymentController,
+    MetricsController, // Add metrics controller from @app/common
   ],
   providers: [
     // Core services
@@ -83,4 +90,10 @@ import { PrismaService } from './database/prisma.service';
     PrismaService,
   ],
 })
-export class PaymentServiceModule {}
+export class PaymentServiceModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(PrometheusMiddleware)
+      .forRoutes('*');
+  }
+}

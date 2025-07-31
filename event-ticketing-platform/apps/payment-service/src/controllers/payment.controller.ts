@@ -8,6 +8,7 @@ import {
   PaymentResponseDto,
   RefundResponseDto 
 } from '../dto';
+import { errors } from '@app/common';
 
 @Controller()
 export class PaymentController {
@@ -42,6 +43,13 @@ export class PaymentController {
       };
     } catch (error) {
       this.logger.error(`Saga payment failed: ${error.message}`, error.stack);
+
+      // Track error metric
+      errors.inc({ 
+        service: 'payment-service', 
+        error_type: 'payment_process_failed', 
+        route: 'payment.process' 
+      });
 
       // Notify saga of failure
       await this.paymentService.notifySagaPaymentFailure(
@@ -85,6 +93,14 @@ export class PaymentController {
       };
     } catch (error) {
       this.logger.error(`Failed to get payment status: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'payment-service', 
+        error_type: 'payment_status_failed', 
+        route: 'payment.status' 
+      });
+      
       return {
         success: false,
         message: `Failed to get payment status: ${error.message}`,
@@ -123,6 +139,13 @@ export class PaymentController {
       };
     } catch (error) {
       this.logger.error(`Refund failed: ${error.message}`, error.stack);
+
+      // Track error metric
+      errors.inc({ 
+        service: 'payment-service', 
+        error_type: 'payment_refund_failed', 
+        route: 'payment.refund' 
+      });
 
       // If this is part of a saga, notify the orchestrator of failure
       if (payload.sagaExecutionId && payload.stepNumber) {
@@ -163,6 +186,14 @@ export class PaymentController {
       };
     } catch (error) {
       this.logger.error(`Webhook processing failed: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'payment-service', 
+        error_type: 'payment_webhook_failed', 
+        route: 'payment.webhook' 
+      });
+      
       return {
         success: false,
         message: `Webhook processing failed: ${error.message}`,
@@ -184,6 +215,14 @@ export class PaymentController {
       };
     } catch (error) {
       this.logger.error(`Failed to list providers: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'payment-service', 
+        error_type: 'payment_providers_list_failed', 
+        route: 'payment.providers.list' 
+      });
+      
       return {
         success: false,
         message: `Failed to list providers: ${error.message}`,
@@ -211,6 +250,14 @@ export class PaymentController {
       };
     } catch (error) {
       this.logger.error(`Failed to get capabilities: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'payment-service', 
+        error_type: 'payment_capabilities_failed', 
+        route: 'payment.providers.capabilities' 
+      });
+      
       return {
         success: false,
         message: `Failed to get capabilities: ${error.message}`,
@@ -232,6 +279,14 @@ export class PaymentController {
       };
     } catch (error) {
       this.logger.error(`Health check failed: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'payment-service', 
+        error_type: 'payment_health_failed', 
+        route: 'payment.health' 
+      });
+      
       return {
         success: false,
         message: `Payment service is unhealthy: ${error.message}`,
