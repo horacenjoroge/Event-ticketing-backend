@@ -1,5 +1,23 @@
+version: '3.8'
+
 services:
-  # PostgreSQL for User Service
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-loadbalancer
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "8090:8080"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/logs:/var/log/nginx
+    depends_on:
+      - api-gateway-1
+      - api-gateway-2
+    networks:
+      - microservices
+
+  # ========== POSTGRESQL DATABASES ==========
   postgres-user:
     image: postgres:15-alpine
     container_name: postgres-user
@@ -21,7 +39,6 @@ services:
       timeout: 10s
       retries: 3
 
-  # PostgreSQL for Event Service
   postgres-event:
     image: postgres:15-alpine
     container_name: postgres-event
@@ -43,7 +60,6 @@ services:
       timeout: 10s
       retries: 3
 
-  # PostgreSQL for Ticket Service
   postgres-ticket:
     image: postgres:15-alpine
     container_name: postgres-ticket
@@ -65,7 +81,6 @@ services:
       timeout: 10s
       retries: 3
 
-  # PostgreSQL for Order Service
   postgres-order:
     image: postgres:15-alpine
     container_name: postgres-order
@@ -87,7 +102,6 @@ services:
       timeout: 10s
       retries: 3
 
-  # PostgreSQL for Payment Service
   postgres-payment:
     image: postgres:15-alpine
     container_name: postgres-payment
@@ -109,7 +123,6 @@ services:
       timeout: 10s
       retries: 3
 
-  # PostgreSQL for Notification Service
   postgres-notification:
     image: postgres:15-alpine
     container_name: postgres-notification
@@ -131,7 +144,7 @@ services:
       timeout: 10s
       retries: 3
 
-  # RabbitMQ
+  # ========== MESSAGE QUEUE & CACHE ==========
   rabbitmq:
     image: rabbitmq:3-management-alpine
     container_name: rabbitmq
@@ -153,7 +166,6 @@ services:
       timeout: 10s
       retries: 3
 
-  # Redis
   redis:
     image: redis:7-alpine
     container_name: redis
@@ -171,7 +183,522 @@ services:
       timeout: 10s
       retries: 3
 
-  # User Service
+  # ========== API GATEWAY INSTANCES (Load Balanced) ==========
+  api-gateway-1:
+    build:
+      context: .
+      dockerfile: apps/api-gateway/dockerfile
+    container_name: api-gateway-1
+    env_file: .env
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - API_GATEWAY_PORT=3000
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      - REDIS_URL=${REDIS_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - CORS_ORIGINS=${CORS_ORIGINS}
+      - ENABLE_SWAGGER=${ENABLE_SWAGGER:-true}
+      - SERVICE_NAME=api-gateway-1
+      - INSTANCE_ID=1
+      - ENABLE_METRICS=true
+      - APP_VERSION=1.0.0
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      user-service-1:
+        condition: service_started
+      user-service-2:
+        condition: service_started
+    volumes:
+      - ./apps/api-gateway:/usr/src/app/apps/api-gateway
+      - ./libs:/usr/src/app/libs
+      - /usr/src/app/node_modules
+    networks:
+      - microservices
+
+  api-gateway-2:
+    build:
+      context: .
+      dockerfile: apps/api-gateway/dockerfile
+    container_name: api-gateway-2
+    env_file: .env
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - API_GATEWAY_PORT=3000
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      - REDIS_URL=${REDIS_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - CORS_ORIGINS=${CORS_ORIGINS}
+      - ENABLE_SWAGGER=${ENABLE_SWAGGER:-true}
+      - SERVICE_NAME=api-gateway-2
+      - INSTANCE_ID=2
+      - ENABLE_METRICS=true
+      - APP_VERSION=1.0.0
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      user-service-1:
+        condition: service_started
+      user-service-2:
+        condition: service_started
+    volumes:
+      - ./apps/api-gateway:/usr/src/app/apps/api-gateway
+      - ./libs:/usr/src/app/libs
+      - /usr/src/app/node_modules
+    networks:
+      - microservices
+
+  # ========== USER SERVICE INSTANCES (Load Balanced) ==========
+  user-service-1:
+    build:
+      context: .
+      dockerfile: apps/user-service/Dockerfile
+    container_name: user-service-1
+    env_file: .env
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - DATABASE_URL=${DATABASE_URL}
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      - REDIS_URL=${REDIS_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - SERVICE_NAME=user-service-1
+      - INSTANCE_ID=1
+      - ENABLE_METRICS=true
+      - APP_VERSION=1.0.0
+      - USER_SERVICE_PORT=3001
+    depends_on:
+      postgres-user:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./apps/user-service:/usr/src/app/apps/user-service
+      - ./libs:/usr/src/app/libs
+      - /usr/src/app/node_modules
+    networks:
+      - microservices
+
+  user-service-2:
+    build:
+      context: .
+      dockerfile: apps/user-service/Dockerfile
+    container_name: user-service-2
+    env_file: .env
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - DATABASE_URL=${DATABASE_URL}
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      - REDIS_URL=${REDIS_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - SERVICE_NAME=user-service-2
+      - INSTANCE_ID=2
+      - ENABLE_METRICS=true
+      - APP_VERSION=1.0.0
+      - USER_SERVICE_PORT=3001
+    depends_on:
+      postgres-user:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./apps/user-service:/usr/src/app/apps/user-service
+      - ./libs:/usr/src/app/libs
+      - /usr/src/app/node_modules
+    networks:
+      - microservices
+
+  # ========== EVENT SERVICE INSTANCES (Load Balanced) ==========
+  event-service-1:
+    build:
+      context: .
+      dockerfile: apps/event-service/Dockerfile
+    container_name: event-service-1
+    env_file: .env
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - EVENT_DATABASE_URL=${EVENT_DATABASE_URL}
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      - REDIS_URL=${REDIS_URL}
+      - SERVICE_NAME=event-service-1
+      - INSTANCE_ID=1
+      - ENABLE_METRICS=true
+      - APP_VERSION=1.0.0
+      - EVENT_SERVICE_PORT=3002
+    depends_on:
+      postgres-event:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./apps/event-service:/usr/src/app/apps/event-service
+      - ./libs:/usr/src/app/libs
+      - /usr/src/app/node_modules
+    networks:
+      - microservices
+
+  event-service-2:
+    build:
+      context: .
+      dockerfile: apps/event-service/Dockerfile
+    container_name: event-service-2
+    env_file: .env
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - EVENT_DATABASE_URL=${EVENT_DATABASE_URL}
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      - REDIS_URL=${REDIS_URL}
+      - SERVICE_NAME=event-service-2
+      - INSTANCE_ID=2
+      - ENABLE_METRICS=true
+      - APP_VERSION=1.0.0
+      - EVENT_SERVICE_PORT=3002
+    depends_on:
+      postgres-event:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./apps/event-service:/usr/src/app/apps/event-service
+      - ./libs:/usr/src/app/libs
+      - /usr/src/app/node_modules
+    networks:
+      - microservices
+
+  # ========== TICKET SERVICE INSTANCES (Load Balanced) ==========
+  ticket-service-1:
+    build:
+      context: .
+      dockerfile: apps/ticket-service/Dockerfile
+    container_name: ticket-service-1
+    env_file: .env
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - TICKET_DATABASE_URL=${TICKET_DATABASE_URL}
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      - REDIS_URL=${REDIS_URL}
+      - RESERVATION_TIMEOUT_MINUTES=${RESERVATION_TIMEOUT_MINUTES:-15}
+      - MAX_TICKETS_PER_USER=${MAX_TICKETS_PER_USER:-10}
+      - LOW_STOCK_THRESHOLD=${LOW_STOCK_THRESHOLD:-10}
+      - SERVICE_NAME=ticket-service-1
+      - INSTANCE_ID=1
+      - ENABLE_METRICS=true
+      - APP_VERSION=1.0.0
+      - TICKET_SERVICE_PORT=3003
+    depends_on:
+      postgres-ticket:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./apps/ticket-service:/usr/src/app/apps/ticket-service
+      - ./libs:/usr/src/app/libs
+      - /usr/src/app/node_modules
+    networks:
+      - microservices
+
+  ticket-service-2:
+    build:
+      context: .
+      dockerfile: apps/ticket-service/Dockerfile
+    container_name: ticket-service-2
+    env_file: .env
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - TICKET_DATABASE_URL=${TICKET_DATABASE_URL}
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      - REDIS_URL=${REDIS_URL}
+      - RESERVATION_TIMEOUT_MINUTES=${RESERVATION_TIMEOUT_MINUTES:-15}
+      - MAX_TICKETS_PER_USER=${MAX_TICKETS_PER_USER:-10}
+      - LOW_STOCK_THRESHOLD=${LOW_STOCK_THRESHOLD:-10}
+      - SERVICE_NAME=ticket-service-2
+      - INSTANCE_ID=2
+      - ENABLE_METRICS=true
+      - APP_VERSION=1.0.0
+      - TICKET_SERVICE_PORT=3003
+    depends_on:
+      postgres-ticket:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./apps/ticket-service:/usr/src/app/apps/ticket-service
+      - ./libs:/usr/src/app/libs
+      - /usr/src/app/node_modules
+    networks:
+      - microservices
+
+  # ========== ORDER SERVICE INSTANCES (Load Balanced) ==========
+  order-service-1:
+    build:
+      context: .
+      dockerfile: apps/order-service/Dockerfile
+    container_name: order-service-1
+    env_file: .env
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - ORDER_DATABASE_URL=${ORDER_DATABASE_URL}
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      - REDIS_URL=${REDIS_URL}
+      - ORDER_TIMEOUT_MINUTES=${ORDER_TIMEOUT_MINUTES:-30}
+      - MAX_CART_ITEMS=${MAX_CART_ITEMS:-20}
+      - CART_EXPIRY_HOURS=${CART_EXPIRY_HOURS:-24}
+      - SAGA_TIMEOUT_MINUTES=${SAGA_TIMEOUT_MINUTES:-10}
+      - SERVICE_NAME=order-service-1
+      - INSTANCE_ID=1
+      - ENABLE_METRICS=true
+      - APP_VERSION=1.0.0
+      - ORDER_SERVICE_PORT=3004
+    depends_on:
+      postgres-order:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./apps/order-service:/usr/src/app/apps/order-service
+      - ./libs:/usr/src/app/libs
+      - /usr/src/app/node_modules
+    networks:
+      - microservices
+
+  order-service-2:
+    build:
+      context: .
+      dockerfile: apps/order-service/Dockerfile
+    container_name: order-service-2
+    env_file: .env
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - ORDER_DATABASE_URL=${ORDER_DATABASE_URL}
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      - REDIS_URL=${REDIS_URL}
+      - ORDER_TIMEOUT_MINUTES=${ORDER_TIMEOUT_MINUTES:-30}
+      - MAX_CART_ITEMS=${MAX_CART_ITEMS:-20}
+      - CART_EXPIRY_HOURS=${CART_EXPIRY_HOURS:-24}
+      - SAGA_TIMEOUT_MINUTES=${SAGA_TIMEOUT_MINUTES:-10}
+      - SERVICE_NAME=order-service-2
+      - INSTANCE_ID=2
+      - ENABLE_METRICS=true
+      - APP_VERSION=1.0.0
+      - ORDER_SERVICE_PORT=3004
+    depends_on:
+      postgres-order:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./apps/order-service:/usr/src/app/apps/order-service
+      - ./libs:/usr/src/app/libs
+      - /usr/src/app/node_modules
+    networks:
+      - microservices
+
+  # ========== PAYMENT SERVICE INSTANCES (Load Balanced) ==========
+  payment-service-1:
+    build:
+      context: .
+      dockerfile: apps/payment-service/Dockerfile
+    container_name: payment-service-1
+    env_file: .env
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - DATABASE_URL=${PAYMENT_DATABASE_URL}
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      - REDIS_URL=${REDIS_URL}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+      - MPESA_BASE_URL=${MPESA_BASE_URL}
+      - MPESA_CONSUMER_KEY=${MPESA_CONSUMER_KEY}
+      - MPESA_CONSUMER_SECRET=${MPESA_CONSUMER_SECRET}
+      - MPESA_SHORTCODE=${MPESA_SHORTCODE}
+      - MPESA_PASSKEY=${MPESA_PASSKEY}
+      - MPESA_INITIATOR_NAME=${MPESA_INITIATOR_NAME}
+      - MPESA_SECURITY_CREDENTIAL=${MPESA_SECURITY_CREDENTIAL}
+      - MPESA_CALLBACK_URL=${MPESA_CALLBACK_URL}
+      - FLUTTERWAVE_BASE_URL=${FLUTTERWAVE_BASE_URL}
+      - FLUTTERWAVE_PUBLIC_KEY=${FLUTTERWAVE_PUBLIC_KEY}
+      - FLUTTERWAVE_SECRET_KEY=${FLUTTERWAVE_SECRET_KEY}
+      - FLUTTERWAVE_ENCRYPTION_KEY=${FLUTTERWAVE_ENCRYPTION_KEY}
+      - FLUTTERWAVE_REDIRECT_URL=${FLUTTERWAVE_REDIRECT_URL}
+      - FLUTTERWAVE_WEBHOOK_URL=${FLUTTERWAVE_WEBHOOK_URL}
+      - FLUTTERWAVE_WEBHOOK_SECRET=${FLUTTERWAVE_WEBHOOK_SECRET}
+      - PAYMENT_TIMEOUT_SECONDS=${PAYMENT_TIMEOUT_SECONDS:-30}
+      - SUPPORTED_CURRENCIES=${SUPPORTED_CURRENCIES}
+      - PLATFORM_FEE_PERCENTAGE=${PLATFORM_FEE_PERCENTAGE:-2.5}
+      - SERVICE_NAME=payment-service-1
+      - INSTANCE_ID=1
+      - ENABLE_METRICS=true
+      - APP_VERSION=1.0.0
+      - PAYMENT_SERVICE_PORT=3005
+    depends_on:
+      postgres-payment:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./apps/payment-service:/usr/src/app/apps/payment-service
+      - ./libs:/usr/src/app/libs
+      - /usr/src/app/node_modules
+    networks:
+      - microservices
+
+  payment-service-2:
+    build:
+      context: .
+      dockerfile: apps/payment-service/Dockerfile
+    container_name: payment-service-2
+    env_file: .env
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - DATABASE_URL=${PAYMENT_DATABASE_URL}
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      - REDIS_URL=${REDIS_URL}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+      - MPESA_BASE_URL=${MPESA_BASE_URL}
+      - MPESA_CONSUMER_KEY=${MPESA_CONSUMER_KEY}
+      - MPESA_CONSUMER_SECRET=${MPESA_CONSUMER_SECRET}
+      - MPESA_SHORTCODE=${MPESA_SHORTCODE}
+      - MPESA_PASSKEY=${MPESA_PASSKEY}
+      - MPESA_INITIATOR_NAME=${MPESA_INITIATOR_NAME}
+      - MPESA_SECURITY_CREDENTIAL=${MPESA_SECURITY_CREDENTIAL}
+      - MPESA_CALLBACK_URL=${MPESA_CALLBACK_URL}
+      - FLUTTERWAVE_BASE_URL=${FLUTTERWAVE_BASE_URL}
+      - FLUTTERWAVE_PUBLIC_KEY=${FLUTTERWAVE_PUBLIC_KEY}
+      - FLUTTERWAVE_SECRET_KEY=${FLUTTERWAVE_SECRET_KEY}
+      - FLUTTERWAVE_ENCRYPTION_KEY=${FLUTTERWAVE_ENCRYPTION_KEY}
+      - FLUTTERWAVE_REDIRECT_URL=${FLUTTERWAVE_REDIRECT_URL}
+      - FLUTTERWAVE_WEBHOOK_URL=${FLUTTERWAVE_WEBHOOK_URL}
+      - FLUTTERWAVE_WEBHOOK_SECRET=${FLUTTERWAVE_WEBHOOK_SECRET}
+      - PAYMENT_TIMEOUT_SECONDS=${PAYMENT_TIMEOUT_SECONDS:-30}
+      - SUPPORTED_CURRENCIES=${SUPPORTED_CURRENCIES}
+      - PLATFORM_FEE_PERCENTAGE=${PLATFORM_FEE_PERCENTAGE:-2.5}
+      - SERVICE_NAME=payment-service-2
+      - INSTANCE_ID=2
+      - ENABLE_METRICS=true
+      - APP_VERSION=1.0.0
+      - PAYMENT_SERVICE_PORT=3005
+    depends_on:
+      postgres-payment:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./apps/payment-service:/usr/src/app/apps/payment-service
+      - ./libs:/usr/src/app/libs
+      - /usr/src/app/node_modules
+    networks:
+      - microservices
+
+  # ========== NOTIFICATION SERVICE INSTANCES (Load Balanced) ==========
+  notification-service-1:
+    build:
+      context: .
+      dockerfile: apps/notification-service/Dockerfile
+    container_name: notification-service-1
+    env_file: .env
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - NOTIFICATION_DATABASE_URL=${NOTIFICATION_DATABASE_URL}
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      - REDIS_URL=${REDIS_URL}
+      - BREVO_API_KEY=${BREVO_API_KEY}
+      - FROM_EMAIL=${FROM_EMAIL}
+      - FROM_NAME=${FROM_NAME}
+      - SMS_PROVIDER=${SMS_PROVIDER:-mock}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
+      - TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER}
+      - DAILY_EMAIL_LIMIT=${DAILY_EMAIL_LIMIT:-300}
+      - NOTIFICATION_QUEUE_CONCURRENCY=${NOTIFICATION_QUEUE_CONCURRENCY:-10}
+      - MAX_RETRY_ATTEMPTS=${MAX_RETRY_ATTEMPTS:-3}
+      - RETRY_DELAY_SECONDS=${RETRY_DELAY_SECONDS:-60}
+      - SERVICE_NAME=notification-service-1
+      - INSTANCE_ID=1
+      - ENABLE_METRICS=true
+      - APP_VERSION=1.0.0
+      - NOTIFICATION_SERVICE_PORT=3006
+    depends_on:
+      postgres-notification:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./apps/notification-service:/usr/src/app/apps/notification-service
+      - ./libs:/usr/src/app/libs
+      - /usr/src/app/node_modules
+    networks:
+      - microservices
+
+  notification-service-2:
+    build:
+      context: .
+      dockerfile: apps/notification-service/Dockerfile
+    container_name: notification-service-2
+    env_file: .env
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - NOTIFICATION_DATABASE_URL=${NOTIFICATION_DATABASE_URL}
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      - REDIS_URL=${REDIS_URL}
+      - BREVO_API_KEY=${BREVO_API_KEY}
+      - FROM_EMAIL=${FROM_EMAIL}
+      - FROM_NAME=${FROM_NAME}
+      - SMS_PROVIDER=${SMS_PROVIDER:-mock}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
+      - TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER}
+      - DAILY_EMAIL_LIMIT=${DAILY_EMAIL_LIMIT:-300}
+      - NOTIFICATION_QUEUE_CONCURRENCY=${NOTIFICATION_QUEUE_CONCURRENCY:-10}
+      - MAX_RETRY_ATTEMPTS=${MAX_RETRY_ATTEMPTS:-3}
+      - RETRY_DELAY_SECONDS=${RETRY_DELAY_SECONDS:-60}
+      - SERVICE_NAME=notification-service-2
+      - INSTANCE_ID=2
+      - ENABLE_METRICS=true
+      - APP_VERSION=1.0.0
+      - NOTIFICATION_SERVICE_PORT=3006
+    depends_on:
+      postgres-notification:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./apps/notification-service:/usr/src/app/apps/notification-service
+      - ./libs:/usr/src/app/libs
+      - /usr/src/app/node_modules
+    networks:
+      - microservices
+
+  # ========== ORIGINAL SINGLE INSTANCES (For development) ==========
   user-service:
     build:
       context: .
@@ -203,8 +730,9 @@ services:
       - /usr/src/app/node_modules
     networks:
       - microservices
+    profiles:
+      - development
 
-  # Event Service
   event-service:
     build:
       context: .
@@ -235,8 +763,9 @@ services:
       - /usr/src/app/node_modules
     networks:
       - microservices
+    profiles:
+      - development
 
-  # Ticket Service
   ticket-service:
     build:
       context: .
@@ -270,8 +799,9 @@ services:
       - /usr/src/app/node_modules
     networks:
       - microservices
+    profiles:
+      - development
 
-  # Order Service
   order-service:
     build:
       context: .
@@ -306,8 +836,9 @@ services:
       - /usr/src/app/node_modules
     networks:
       - microservices
+    profiles:
+      - development
 
-  # Payment Service
   payment-service:
     build:
       context: .
@@ -359,8 +890,9 @@ services:
       - /usr/src/app/node_modules
     networks:
       - microservices
+    profiles:
+      - development
 
-  # Notification Service
   notification-service:
     build:
       context: .
@@ -402,8 +934,9 @@ services:
       - /usr/src/app/node_modules
     networks:
       - microservices
+    profiles:
+      - development
 
-  # API Gateway
   api-gateway:
     build:
       context: .
@@ -446,8 +979,10 @@ services:
       - /usr/src/app/node_modules
     networks:
       - microservices
+    profiles:
+      - development
 
-  # Prometheus
+  # ========== MONITORING ==========
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
@@ -464,7 +999,6 @@ services:
       - microservices
     restart: unless-stopped
 
-  # Grafana
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
@@ -482,6 +1016,20 @@ services:
     depends_on:
       - prometheus
     restart: unless-stopped
+
+  # ========== ALERTMANAGER (Optional) ==========
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./infrastructure/monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+    networks:
+      - microservices
+    restart: unless-stopped
+    profiles:
+      - monitoring
 
 volumes:
   postgres_user_data:

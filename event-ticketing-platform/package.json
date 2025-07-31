@@ -12,23 +12,88 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/apps/api-gateway/main",
+    
     "start:api-gateway": "nest start api-gateway --watch",
     "start:user-service": "nest start user-service --watch",
     "start:event-service": "nest start event-service --watch",
+    "start:ticket-service": "nest start ticket-service --watch",
+    "start:order-service": "nest start order-service --watch",
+    "start:payment-service": "nest start payment-service --watch",
+    "start:notification-service": "nest start notification-service --watch",
+    
     "build:api-gateway": "nest build api-gateway",
     "build:user-service": "nest build user-service",
+    "build:event-service": "nest build event-service",
+    "build:ticket-service": "nest build ticket-service",
+    "build:order-service": "nest build order-service",
+    "build:payment-service": "nest build payment-service",
+    "build:notification-service": "nest build notification-service",
+    "build:all": "npm run build:api-gateway && npm run build:user-service && npm run build:event-service && npm run build:ticket-service && npm run build:order-service && npm run build:payment-service && npm run build:notification-service",
+    
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./apps/api-gateway/test/jest-e2e.json",
+    
+    "test:api-gateway": "jest --config apps/api-gateway/jest.json",
+    "test:user-service": "jest --config apps/user-service/jest.json",
+    "test:event-service": "jest --config apps/event-service/jest.json",
+    "test:ticket-service": "jest --config apps/ticket-service/jest.json",
+    "test:order-service": "jest --config apps/order-service/jest.json",
+    "test:payment-service": "jest --config apps/payment-service/jest.json",
+    "test:notification-service": "jest --config apps/notification-service/jest.json",
+    "test:all": "npm run test:api-gateway && npm run test:user-service && npm run test:event-service && npm run test:ticket-service && npm run test:order-service && npm run test:payment-service && npm run test:notification-service",
+    
     "docker:build": "docker compose build",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f",
-    "docker:infrastructure": "docker compose up postgres-user rabbitmq redis -d",
-    "docker:services": "docker compose up api-gateway user-service -d"
+    "docker:restart": "docker compose restart",
+    "docker:clean": "docker compose down -v && docker system prune -f",
+    
+    "docker:infrastructure": "docker compose up postgres-user postgres-event postgres-ticket postgres-order postgres-payment rabbitmq redis -d",
+    "docker:services": "docker compose up api-gateway-1 api-gateway-2 user-service-1 user-service-2 event-service-1 event-service-2 ticket-service-1 ticket-service-2 order-service-1 order-service-2 payment-service-1 payment-service-2 notification-service-1 notification-service-2 -d",
+    "docker:monitoring": "docker compose up prometheus grafana alertmanager -d",
+    "docker:loadbalancer": "docker compose up nginx -d",
+    
+    "docker:full": "npm run docker:infrastructure && sleep 10 && npm run docker:services && sleep 5 && npm run docker:monitoring && npm run docker:loadbalancer",
+    "docker:dev": "docker compose up postgres-user rabbitmq redis prometheus grafana -d",
+    
+    "logs:nginx": "docker compose logs -f nginx",
+    "logs:api-gateway": "docker compose logs -f api-gateway-1 api-gateway-2",
+    "logs:user-service": "docker compose logs -f user-service-1 user-service-2",
+    "logs:event-service": "docker compose logs -f event-service-1 event-service-2",
+    "logs:ticket-service": "docker compose logs -f ticket-service-1 ticket-service-2",
+    "logs:order-service": "docker compose logs -f order-service-1 order-service-2",
+    "logs:payment-service": "docker compose logs -f payment-service-1 payment-service-2",
+    "logs:notification-service": "docker compose logs -f notification-service-1 notification-service-2",
+    "logs:monitoring": "docker compose logs -f prometheus grafana alertmanager",
+    "logs:infrastructure": "docker compose logs -f postgres-user postgres-event postgres-ticket postgres-order postgres-payment rabbitmq redis",
+    
+    "health:check": "curl -f http://localhost/health || exit 1",
+    "health:nginx": "curl -f http://localhost:8080/health || exit 1",
+    "health:services": "node scripts/health-check.js",
+    
+    "loadtest:light": "node scripts/load-test.js --requests=100 --concurrent=5",
+    "loadtest:medium": "node scripts/load-test.js --requests=1000 --concurrent=20",
+    "loadtest:heavy": "node scripts/load-test.js --requests=5000 --concurrent=50",
+    
+    "scale:up": "docker compose up --scale api-gateway-1=2 --scale api-gateway-2=2 --scale user-service-1=2 --scale user-service-2=2 -d",
+    "scale:down": "docker compose up --scale api-gateway-1=1 --scale api-gateway-2=1 --scale user-service-1=1 --scale user-service-2=1 -d",
+    
+    "deploy:staging": "docker compose -f docker-compose.yml -f docker-compose.staging.yml up -d",
+    "deploy:production": "docker compose -f docker-compose.yml -f docker-compose.production.yml up -d",
+    
+    "backup:db": "node scripts/backup-databases.js",
+    "restore:db": "node scripts/restore-databases.js",
+    
+    "ci:build": "npm run build:all",
+    "ci:test": "npm run test:all",
+    "ci:lint": "npm run lint",
+    "ci:security": "npm audit --audit-level=high",
+    "ci:docker": "npm run docker:build && npm run docker:up && sleep 30 && npm run health:check"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

@@ -1,0 +1,544 @@
+.
+├── .gitignore
+├── .prettierrc
+├── }
+├── apps
+│   ├── api-gateway
+│   │   ├── dockerfile
+│   │   ├── src
+│   │   │   ├── api-gateway.controller.spec.ts
+│   │   │   ├── api-gateway.controller.ts
+│   │   │   ├── api-gateway.module.ts
+│   │   │   ├── api-gateway.service.ts
+│   │   │   ├── app.module.ts
+│   │   │   ├── auth
+│   │   │   │   ├── auth.controller.ts
+│   │   │   │   ├── auth.module.ts
+│   │   │   │   ├── get-user.decorator.ts
+│   │   │   │   └── jwt-auth.guard.ts
+│   │   │   ├── common
+│   │   │   │   └── microservice-client.module.ts
+│   │   │   ├── events
+│   │   │   │   ├── events.controller.ts
+│   │   │   │   └── events.module.ts
+│   │   │   ├── main.ts
+│   │   │   ├── notifications
+│   │   │   │   ├── dto
+│   │   │   │   │   └── send-notification.dto.ts
+│   │   │   │   ├── notifications.controller.ts
+│   │   │   │   └── notifications.module.ts
+│   │   │   ├── orders
+│   │   │   │   ├── orders.controller.ts
+│   │   │   │   └── orders.module.ts
+│   │   │   ├── payments
+│   │   │   │   ├── dto
+│   │   │   │   │   └── index.ts
+│   │   │   │   ├── payments.controller.ts
+│   │   │   │   └── payments.module.ts
+│   │   │   ├── test
+│   │   │   │   ├── test.controller.ts
+│   │   │   │   └── test.module.ts
+│   │   │   ├── tickets
+│   │   │   │   ├── tickets.controller.ts
+│   │   │   │   └── tickets.module.ts
+│   │   │   └── users
+│   │   │       ├── users.controller.ts
+│   │   │       └── users.module.ts
+│   │   ├── test
+│   │   │   ├── app.e2e-spec.ts
+│   │   │   └── jest-e2e.json
+│   │   └── tsconfig.app.json
+│   ├── event-service
+│   │   ├── Dockerfile
+│   │   ├── prisma
+│   │   │   ├── generated
+│   │   │   │   └── prisma
+│   │   │   │       ├── client.d.ts
+│   │   │   │       ├── client.js
+│   │   │   │       ├── default.d.ts
+│   │   │   │       ├── default.js
+│   │   │   │       ├── edge.d.ts
+│   │   │   │       ├── edge.js
+│   │   │   │       ├── index-browser.js
+│   │   │   │       ├── index.d.ts
+│   │   │   │       ├── index.js
+│   │   │   │       ├── libquery_engine-darwin.dylib.node
+│   │   │   │       ├── libquery_engine-linux-musl-openssl-3.0.x.so.node
+│   │   │   │       ├── package.json
+│   │   │   │       ├── runtime
+│   │   │   │       │   ├── edge-esm.js
+│   │   │   │       │   ├── edge.js
+│   │   │   │       │   ├── index-browser.d.ts
+│   │   │   │       │   ├── index-browser.js
+│   │   │   │       │   ├── library.d.ts
+│   │   │   │       │   ├── library.js
+│   │   │   │       │   ├── react-native.js
+│   │   │   │       │   ├── wasm-compiler-edge.js
+│   │   │   │       │   └── wasm-engine-edge.js
+│   │   │   │       ├── schema.prisma
+│   │   │   │       ├── wasm.d.ts
+│   │   │   │       └── wasm.js
+│   │   │   └── schema.prisma
+│   │   ├── src
+│   │   │   ├── categories
+│   │   │   │   ├── categories.controller.ts
+│   │   │   │   ├── categories.module.ts
+│   │   │   │   ├── categories.service.ts
+│   │   │   │   └── dto
+│   │   │   │       └── category.dto.ts
+│   │   │   ├── database
+│   │   │   │   ├── database.module.ts
+│   │   │   │   └── prisma.service.ts
+│   │   │   ├── event-service.controller.spec.ts
+│   │   │   ├── event-service.controller.ts
+│   │   │   ├── event-service.module.ts
+│   │   │   ├── event-service.service.ts
+│   │   │   ├── events
+│   │   │   │   ├── dto
+│   │   │   │   │   └── event.dto.ts
+│   │   │   │   ├── events.controller.ts
+│   │   │   │   ├── events.module.ts
+│   │   │   │   └── events.service.ts
+│   │   │   ├── main.ts
+│   │   │   └── venues
+│   │   │       ├── dto
+│   │   │       │   └── venue.dto.ts
+│   │   │       ├── venues.controller.ts
+│   │   │       ├── venues.module.ts
+│   │   │       └── venues.service.ts
+│   │   ├── test
+│   │   │   ├── app.e2e-spec.ts
+│   │   │   └── jest-e2e.json
+│   │   └── tsconfig.app.json
+│   ├── notification-service
+│   │   ├── dockerfile
+│   │   ├── prisma
+│   │   │   ├── generated
+│   │   │   │   ├── client
+│   │   │   │   │   ├── client.d.ts
+│   │   │   │   │   ├── client.js
+│   │   │   │   │   ├── default.d.ts
+│   │   │   │   │   ├── default.js
+│   │   │   │   │   ├── edge.d.ts
+│   │   │   │   │   ├── edge.js
+│   │   │   │   │   ├── index-browser.js
+│   │   │   │   │   ├── index.d.ts
+│   │   │   │   │   ├── index.js
+│   │   │   │   │   ├── libquery_engine-darwin.dylib.node
+│   │   │   │   │   ├── libquery_engine-linux-musl-openssl-3.0.x.so.node
+│   │   │   │   │   ├── libquery_engine-linux-musl.so.node
+│   │   │   │   │   ├── package.json
+│   │   │   │   │   ├── runtime
+│   │   │   │   │   │   ├── edge-esm.js
+│   │   │   │   │   │   ├── edge.js
+│   │   │   │   │   │   ├── index-browser.d.ts
+│   │   │   │   │   │   ├── index-browser.js
+│   │   │   │   │   │   ├── library.d.ts
+│   │   │   │   │   │   ├── library.js
+│   │   │   │   │   │   ├── react-native.js
+│   │   │   │   │   │   ├── wasm-compiler-edge.js
+│   │   │   │   │   │   └── wasm-engine-edge.js
+│   │   │   │   │   ├── schema.prisma
+│   │   │   │   │   ├── wasm.d.ts
+│   │   │   │   │   └── wasm.js
+│   │   │   │   └── prisma
+│   │   │   │       ├── client.d.ts
+│   │   │   │       ├── client.js
+│   │   │   │       ├── default.d.ts
+│   │   │   │       ├── default.js
+│   │   │   │       ├── edge.d.ts
+│   │   │   │       ├── edge.js
+│   │   │   │       ├── index-browser.js
+│   │   │   │       ├── index.d.ts
+│   │   │   │       ├── index.js
+│   │   │   │       ├── libquery_engine-darwin.dylib.node
+│   │   │   │       ├── libquery_engine-linux-musl-openssl-3.0.x.so.node
+│   │   │   │       ├── package.json
+│   │   │   │       ├── runtime
+│   │   │   │       │   ├── edge-esm.js
+│   │   │   │       │   ├── edge.js
+│   │   │   │       │   ├── index-browser.d.ts
+│   │   │   │       │   ├── index-browser.js
+│   │   │   │       │   ├── library.d.ts
+│   │   │   │       │   ├── library.js
+│   │   │   │       │   ├── react-native.js
+│   │   │   │       │   ├── wasm-compiler-edge.js
+│   │   │   │       │   └── wasm-engine-edge.js
+│   │   │   │       ├── schema.prisma
+│   │   │   │       ├── wasm.d.ts
+│   │   │   │       └── wasm.js
+│   │   │   ├── migrations
+│   │   │   │   ├── 20250723011538_init
+│   │   │   │   │   └── migration.sql
+│   │   │   │   └── migration_lock.toml
+│   │   │   └── schema.prisma
+│   │   ├── src
+│   │   │   ├── brevo
+│   │   │   │   ├── brevo.spec.ts
+│   │   │   │   └── brevo.ts
+│   │   │   ├── core
+│   │   │   │   └── notification.service.ts
+│   │   │   ├── database
+│   │   │   │   └── prisma.service.ts
+│   │   │   ├── dto
+│   │   │   │   ├── email-request
+│   │   │   │   │   ├── email-request.spec.ts
+│   │   │   │   │   └── email-request.ts
+│   │   │   │   └── send-notification
+│   │   │   │       ├── send-notification.spec.ts
+│   │   │   │       └── send-notification.ts
+│   │   │   ├── email
+│   │   │   │   ├── email.controller.spec.ts
+│   │   │   │   ├── email.controller.ts
+│   │   │   │   └── email.service.spec.ts
+│   │   │   ├── main.ts
+│   │   │   ├── notification-service.controller.spec.ts
+│   │   │   ├── notification-service.controller.ts
+│   │   │   ├── notification-service.module.ts
+│   │   │   ├── providers
+│   │   │   │   ├── brevo.provider.ts
+│   │   │   │   ├── email.service.ts
+│   │   │   │   ├── sms.service.ts
+│   │   │   │   └── template.service.ts
+│   │   │   ├── saga
+│   │   │   │   ├── notification-saga.controller.ts
+│   │   │   │   └── notification-saga.service.ts
+│   │   │   ├── sms
+│   │   │   │   ├── sms.spec.ts
+│   │   │   │   └── sms.ts
+│   │   │   └── template
+│   │   │       └── template.service.spec.ts
+│   │   ├── test
+│   │   │   ├── app.e2e-spec.ts
+│   │   │   └── jest-e2e.json
+│   │   └── tsconfig.app.json
+│   ├── order-service
+│   │   ├── Dockerfile
+│   │   ├── prisma
+│   │   │   ├── generated
+│   │   │   │   └── prisma
+│   │   │   │       ├── client.d.ts
+│   │   │   │       ├── client.js
+│   │   │   │       ├── default.d.ts
+│   │   │   │       ├── default.js
+│   │   │   │       ├── edge.d.ts
+│   │   │   │       ├── edge.js
+│   │   │   │       ├── index-browser.js
+│   │   │   │       ├── index.d.ts
+│   │   │   │       ├── index.js
+│   │   │   │       ├── libquery_engine-darwin.dylib.node
+│   │   │   │       ├── libquery_engine-linux-musl-openssl-3.0.x.so.node
+│   │   │   │       ├── package.json
+│   │   │   │       ├── runtime
+│   │   │   │       │   ├── edge-esm.js
+│   │   │   │       │   ├── edge.js
+│   │   │   │       │   ├── index-browser.d.ts
+│   │   │   │       │   ├── index-browser.js
+│   │   │   │       │   ├── library.d.ts
+│   │   │   │       │   ├── library.js
+│   │   │   │       │   ├── react-native.js
+│   │   │   │       │   ├── wasm-compiler-edge.js
+│   │   │   │       │   └── wasm-engine-edge.js
+│   │   │   │       ├── schema.prisma
+│   │   │   │       ├── wasm.d.ts
+│   │   │   │       └── wasm.js
+│   │   │   ├── migrations
+│   │   │   │   ├── 20250708033457_init
+│   │   │   │   │   └── migration.sql
+│   │   │   │   ├── 20250708035643_add_compensated_status
+│   │   │   │   │   └── migration.sql
+│   │   │   │   ├── 20250708035809_add_compensated_status
+│   │   │   │   │   └── migration.sql
+│   │   │   │   ├── 20250708040532_add_started_status
+│   │   │   │   │   └── migration.sql
+│   │   │   │   └── migration_lock.toml
+│   │   │   └── schema.prisma
+│   │   ├── src
+│   │   │   ├── cart
+│   │   │   │   ├── cart.controller.ts
+│   │   │   │   └── cart.service.ts
+│   │   │   ├── database
+│   │   │   │   ├── database.module.ts
+│   │   │   │   └── prisma.service.ts
+│   │   │   ├── main.ts
+│   │   │   ├── order
+│   │   │   │   ├── order.controller.ts
+│   │   │   │   └── order.service.ts
+│   │   │   ├── order-service.controller.spec.ts
+│   │   │   ├── order-service.controller.ts
+│   │   │   ├── order-service.module.ts
+│   │   │   ├── order-service.service.ts
+│   │   │   └── saga
+│   │   │       ├── compensation.service.ts
+│   │   │       ├── saga.controller.ts
+│   │   │       └── saga.service.ts
+│   │   ├── test
+│   │   │   ├── app.e2e-spec.ts
+│   │   │   └── jest-e2e.json
+│   │   └── tsconfig.app.json
+│   ├── payment-service
+│   │   ├── Dockerfile
+│   │   ├── prisma
+│   │   │   ├── generated
+│   │   │   │   └── prisma
+│   │   │   │       ├── client.d.ts
+│   │   │   │       ├── client.js
+│   │   │   │       ├── default.d.ts
+│   │   │   │       ├── default.js
+│   │   │   │       ├── edge.d.ts
+│   │   │   │       ├── edge.js
+│   │   │   │       ├── index-browser.js
+│   │   │   │       ├── index.d.ts
+│   │   │   │       ├── index.js
+│   │   │   │       ├── libquery_engine-darwin.dylib.node
+│   │   │   │       ├── libquery_engine-linux-musl-openssl-3.0.x.so.node
+│   │   │   │       ├── package.json
+│   │   │   │       ├── runtime
+│   │   │   │       │   ├── edge-esm.js
+│   │   │   │       │   ├── edge.js
+│   │   │   │       │   ├── index-browser.d.ts
+│   │   │   │       │   ├── index-browser.js
+│   │   │   │       │   ├── library.d.ts
+│   │   │   │       │   ├── library.js
+│   │   │   │       │   ├── react-native.js
+│   │   │   │       │   ├── wasm-compiler-edge.js
+│   │   │   │       │   └── wasm-engine-edge.js
+│   │   │   │       ├── schema.prisma
+│   │   │   │       ├── wasm.d.ts
+│   │   │   │       └── wasm.js
+│   │   │   └── schema.prisma
+│   │   ├── src
+│   │   │   ├── controllers
+│   │   │   │   └── payment.controller.ts
+│   │   │   ├── database
+│   │   │   │   └── prisma.service.ts
+│   │   │   ├── dto
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── payment-request.dto.ts
+│   │   │   │   └── payment-response.dto.ts
+│   │   │   ├── enums
+│   │   │   │   ├── currency.enum.ts
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── payment-method.enum.ts
+│   │   │   │   ├── payment-provider.enum.ts
+│   │   │   │   └── payment-status.enum.ts
+│   │   │   ├── main.ts
+│   │   │   ├── payment-service.controller.spec.ts
+│   │   │   ├── payment-service.controller.ts
+│   │   │   ├── payment-service.module.ts
+│   │   │   ├── payment-service.service.ts
+│   │   │   ├── providers
+│   │   │   │   ├── flutterwave.provider.ts
+│   │   │   │   ├── mpesa.provider.ts
+│   │   │   │   ├── payment-provider.interface.ts
+│   │   │   │   └── stripe.provider.ts
+│   │   │   ├── services
+│   │   │   │   ├── payment-provider.service.ts
+│   │   │   │   └── payment.service.ts
+│   │   │   └── utils
+│   │   │       └── validators.util.ts
+│   │   ├── test
+│   │   │   ├── app.e2e-spec.ts
+│   │   │   └── jest-e2e.json
+│   │   └── tsconfig.app.json
+│   ├── ticket-service
+│   │   ├── Dockerfile
+│   │   ├── prisma
+│   │   │   ├── generated
+│   │   │   │   └── prisma
+│   │   │   │       ├── client.d.ts
+│   │   │   │       ├── client.js
+│   │   │   │       ├── default.d.ts
+│   │   │   │       ├── default.js
+│   │   │   │       ├── edge.d.ts
+│   │   │   │       ├── edge.js
+│   │   │   │       ├── index-browser.js
+│   │   │   │       ├── index.d.ts
+│   │   │   │       ├── index.js
+│   │   │   │       ├── libquery_engine-darwin.dylib.node
+│   │   │   │       ├── libquery_engine-linux-musl-openssl-3.0.x.so.node
+│   │   │   │       ├── package.json
+│   │   │   │       ├── runtime
+│   │   │   │       │   ├── edge-esm.js
+│   │   │   │       │   ├── edge.js
+│   │   │   │       │   ├── index-browser.d.ts
+│   │   │   │       │   ├── index-browser.js
+│   │   │   │       │   ├── library.d.ts
+│   │   │   │       │   ├── library.js
+│   │   │   │       │   ├── react-native.js
+│   │   │   │       │   ├── wasm-compiler-edge.js
+│   │   │   │       │   └── wasm-engine-edge.js
+│   │   │   │       ├── schema.prisma
+│   │   │   │       ├── wasm.d.ts
+│   │   │   │       └── wasm.js
+│   │   │   ├── migrations
+│   │   │   │   ├── 20250706033201_intial_tables
+│   │   │   │   │   └── migration.sql
+│   │   │   │   └── migration_lock.toml
+│   │   │   └── schema.prisma
+│   │   ├── src
+│   │   │   ├── database
+│   │   │   │   ├── database.module.ts
+│   │   │   │   └── prisma.service.ts
+│   │   │   ├── inventory
+│   │   │   │   ├── dto
+│   │   │   │   │   └── inventory.dto.ts
+│   │   │   │   ├── inventory.controller.ts
+│   │   │   │   ├── inventory.module.ts
+│   │   │   │   └── inventory.service.ts
+│   │   │   ├── main.ts
+│   │   │   ├── ticket-service.controller.spec.ts
+│   │   │   ├── ticket-service.controller.ts
+│   │   │   ├── ticket-service.module.ts
+│   │   │   ├── ticket-service.service.ts
+│   │   │   └── ticket-types
+│   │   │       ├── dto
+│   │   │       │   └── ticket-type.dto.ts
+│   │   │       ├── ticket-types.controller.ts
+│   │   │       ├── ticket-types.module.ts
+│   │   │       └── ticket-types.service.ts
+│   │   ├── test
+│   │   │   ├── app.e2e-spec.ts
+│   │   │   └── jest-e2e.json
+│   │   └── tsconfig.app.json
+│   └── user-service
+│       ├── .gitignore
+│       ├── Dockerfile
+│       ├── generated
+│       │   └── prisma
+│       │       ├── client.d.ts
+│       │       ├── client.js
+│       │       ├── default.d.ts
+│       │       ├── default.js
+│       │       ├── edge.d.ts
+│       │       ├── edge.js
+│       │       ├── index-browser.js
+│       │       ├── index.d.ts
+│       │       ├── index.js
+│       │       ├── libquery_engine-darwin.dylib.node
+│       │       ├── package.json
+│       │       ├── runtime
+│       │       │   ├── edge-esm.js
+│       │       │   ├── edge.js
+│       │       │   ├── index-browser.d.ts
+│       │       │   ├── index-browser.js
+│       │       │   ├── library.d.ts
+│       │       │   ├── library.js
+│       │       │   ├── react-native.js
+│       │       │   ├── wasm-compiler-edge.js
+│       │       │   └── wasm-engine-edge.js
+│       │       ├── schema.prisma
+│       │       ├── wasm.d.ts
+│       │       └── wasm.js
+│       ├── prisma
+│       │   ├── generated
+│       │   │   └── prisma
+│       │   │       ├── client.d.ts
+│       │   │       ├── client.js
+│       │   │       ├── default.d.ts
+│       │   │       ├── default.js
+│       │   │       ├── edge.d.ts
+│       │   │       ├── edge.js
+│       │   │       ├── index-browser.js
+│       │   │       ├── index.d.ts
+│       │   │       ├── index.js
+│       │   │       ├── libquery_engine-darwin.dylib.node
+│       │   │       ├── libquery_engine-linux-musl-openssl-3.0.x.so.node
+│       │   │       ├── package.json
+│       │   │       ├── runtime
+│       │   │       │   ├── edge-esm.js
+│       │   │       │   ├── edge.js
+│       │   │       │   ├── index-browser.d.ts
+│       │   │       │   ├── index-browser.js
+│       │   │       │   ├── library.d.ts
+│       │   │       │   ├── library.js
+│       │   │       │   ├── react-native.js
+│       │   │       │   ├── wasm-compiler-edge.js
+│       │   │       │   └── wasm-engine-edge.js
+│       │   │       ├── schema.prisma
+│       │   │       ├── wasm.d.ts
+│       │   │       └── wasm.js
+│       │   └── schema.prisma
+│       ├── src
+│       │   ├── auth
+│       │   │   ├── auth.controller.ts
+│       │   │   ├── auth.module.ts
+│       │   │   └── auth.service.ts
+│       │   ├── database
+│       │   │   ├── database.module.ts
+│       │   │   └── prisma.service.ts
+│       │   ├── main.ts
+│       │   ├── user-service.module.ts
+│       │   └── users
+│       │       ├── dto
+│       │       │   └── create-user.dto.ts
+│       │       ├── users.controller.ts
+│       │       ├── users.module.ts
+│       │       └── users.service.ts
+│       ├── test
+│       │   ├── app.e2e-spec.ts
+│       │   └── jest-e2e.json
+│       └── tsconfig.app.json
+├── billingDetails:
+├── billingEmail:
+├── build.log
+├── curl
+├── debug_notification.sh
+├── docker-compose.yml
+├── eslint.config.mjs
+├── infrastructure
+│   ├── monitoring
+│   │   ├── alert_rules.yml
+│   │   ├── alertmanager.yml
+│   │   ├── grafana
+│   │   │   └── provisioning
+│   │   │       ├── dashboards
+│   │   │       │   └── dashboard.yml
+│   │   │       └── datasources
+│   │   │           └── prometheus.yml
+│   │   └── prometheus.yml
+│   └── sql
+│       ├── init-event-db.sql
+│       ├── init-notification-db.sql
+│       ├── init-order-db.sql
+│       ├── init-payment-db.sql
+│       ├── init-ticket-db.sql
+│       └── init-user-db.sql
+├── libs
+│   └── common
+│       ├── src
+│       │   ├── common.module.ts
+│       │   ├── common.service.spec.ts
+│       │   ├── common.service.ts
+│       │   ├── index.ts
+│       │   └── monitoring
+│       │       ├── index.ts
+│       │       ├── metrics.controller.ts
+│       │       ├── metrics.ts
+│       │       └── middleware.ts
+│       └── tsconfig.lib.json
+├── name:
+├── nest-cli.json
+├── nginx
+│   ├── docker-compose.loadbalancer.yml
+│   ├── logs
+│   │   ├── access.log
+│   │   └── error.log
+│   ├── nginx.conf
+│   └── proxy_params.conf
+├── package-lock.json
+├── package.json
+├── paymentMethodId:
+├── project-structure.txt
+├── README.md
+├── scripts
+│   ├── health-check.js
+│   └── load-test.js
+├── structure.txt
+├── temp_debug.txt
+├── test_microservice_auth.sh
+├── tree.txt
+├── tsconfig.build.json
+└── tsconfig.json
+
+124 directories, 418 files

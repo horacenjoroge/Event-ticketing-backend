@@ -1,0 +1,81 @@
+# docker-compose.loadbalancer.yml
+version: '3.8'
+
+services:
+  # Nginx Load Balancer
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - api-gateway-1
+      - api-gateway-2
+    networks:
+      - eventify-network
+
+  # Multiple API Gateway Instances
+  api-gateway-1:
+    build: ./apps/api-gateway
+    environment:
+      - PORT=3001
+      - SERVICE_NAME=api-gateway-1
+      - PROMETHEUS_PREFIX=eventify_
+    networks:
+      - eventify-network
+    depends_on:
+      - redis
+      - rabbitmq
+
+  api-gateway-2:
+    build: ./apps/api-gateway
+    environment:
+      - PORT=3001
+      - SERVICE_NAME=api-gateway-2
+      - PROMETHEUS_PREFIX=eventify_
+    networks:
+      - eventify-network
+    depends_on:
+      - redis
+      - rabbitmq
+
+  # Multiple Order Service Instances
+  order-service-1:
+    build: ./apps/order-service
+    environment:
+      - PORT=3004
+      - SERVICE_NAME=order-service-1
+    networks:
+      - eventify-network
+
+  order-service-2:
+    build: ./apps/order-service
+    environment:
+      - PORT=3004
+      - SERVICE_NAME=order-service-2
+    networks:
+      - eventify-network
+
+  # Multiple Payment Service Instances
+  payment-service-1:
+    build: ./apps/payment-service
+    environment:
+      - PORT=3005
+      - SERVICE_NAME=payment-service-1
+    networks:
+      - eventify-network
+
+  payment-service-2:
+    build: ./apps/payment-service
+    environment:
+      - PORT=3005
+      - SERVICE_NAME=payment-service-2
+    networks:
+      - eventify-network
+
+networks:
+  eventify-network:
+    driver: bridge
