@@ -1,22 +1,28 @@
-// =====================================================
 // apps/notification-service/src/main.ts
-// =====================================================
 import { NestFactory } from '@nestjs/core';
 import { Transport, MicroserviceOptions } from '@nestjs/microservices';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { NotificationServiceModule } from './notification-service.module';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const logger = new Logger('NotificationService');
 
-  // Create pure microservice (RabbitMQ only - no HTTP)
+  // Create application context to get config service
+  const appContext = await NestFactory.createApplicationContext(
+    NotificationServiceModule,
+  );
+  const configService = appContext.get(ConfigService);
+
+  // Create microservice
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
     NotificationServiceModule,
     {
       transport: Transport.RMQ,
       options: {
         urls: [
-          process.env.RABBITMQ_URL || 'amqp://admin:admin123@rabbitmq:5672',
+          configService.get<string>('RABBITMQ_URL') ||
+            'amqp://admin:admin123@rabbitmq:5672',
         ],
         queue: 'notification_queue',
         queueOptions: {
@@ -28,17 +34,32 @@ async function bootstrap() {
     },
   );
 
-  app.useGlobalPipes(new ValidationPipe({
+  // Also create HTTP server for metrics endpoint
+  const httpApp = await NestFactory.create(NotificationServiceModule);
+  
+  // Global validation pipe for both apps
+  const validationPipe = new ValidationPipe({
     transform: true,
     whitelist: true,
     forbidNonWhitelisted: true,
-  }));
+  });
 
+  app.useGlobalPipes(validationPipe);
+  httpApp.useGlobalPipes(validationPipe);
+
+  // Start microservice
   await app.listen();
+  
+  // Start HTTP server for metrics
+  const httpPort = process.env.NOTIFICATION_SERVICE_PORT || 3006;
+  await httpApp.listen(httpPort);
 
   logger.log('🚀 Notification Service (Microservice) is running!');
   logger.log('📡 Listening on: notification_queue');
   logger.log('🔌 Transport: RabbitMQ');
+  logger.log(`HTTP server running on port ${httpPort} for metrics`);
+  logger.log(`📊 Metrics available at http://localhost:${httpPort}/metrics`);
+  logger.log(`💚 Health check at http://localhost:${httpPort}/health`);
   logger.log(`📧 Brevo: ${process.env.BREVO_API_KEY ? '✅ Enabled' : '❌ Disabled'}`);
   logger.log(`📱 SMS: ${process.env.SMS_PROVIDER ? '✅ Enabled' : '❌ Not configured'}`);
   logger.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);

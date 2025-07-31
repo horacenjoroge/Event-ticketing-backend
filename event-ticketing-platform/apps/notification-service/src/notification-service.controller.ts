@@ -1,10 +1,7 @@
-// =====================================================
 // apps/notification-service/src/notification-service.controller.ts
-// WORKING VERSION - Bypasses Prisma issues completely
-// UPDATED: Adds both HTTP endpoints and MessagePattern support
-// =====================================================
 import { Controller, Logger, Get, Post, Body, Headers } from '@nestjs/common';
 import { MessagePattern, Payload, Ctx, RmqContext } from '@nestjs/microservices';
+import { errors, notificationsSent } from '@app/common';
 
 interface NotificationRequest {
   type: string;
@@ -65,40 +62,61 @@ export class NotificationServiceController {
     @Body() data: NotificationRequest,
     @Headers('authorization') auth: string
   ) {
-    return this.processNotification(data);
+    try {
+      const result = await this.processNotification(data);
+      return result;
+    } catch (error) {
+      // Track error metric
+      errors.inc({ 
+        service: 'notification-service', 
+        error_type: 'http_send_failed', 
+        route: 'POST /send' 
+      });
+      throw error;
+    }
   }
 
   @Get('analytics')
   async getAnalytics() {
-    this.logger.log('📊 Analytics requested');
-    
-    return {
-      message: "Analytics retrieved successfully",
-      data: {
-        period: {
-          startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-          endDate: new Date().toISOString()
-        },
-        summary: {
-          totalNotifications: this.notificationStats.total,
-          sentNotifications: this.notificationStats.sent,
-          failedNotifications: this.notificationStats.failed,
-          successRate: this.notificationStats.successRate
-        },
-        breakdown: {
-          byType: [
-            { type: "EMAIL", count: this.notificationStats.sent },
-            { type: "SMS", count: 3 }
-          ],
-          byProvider: [
-            { provider: "MOCK_BREVO", count: this.notificationStats.sent },
-            { provider: "MOCK_SMS", count: 3 }
-          ]
-        },
-        recentNotifications: this.notifications.slice(-5),
-        timestamp: new Date().toISOString()
-      }
-    };
+    try {
+      this.logger.log('📊 Analytics requested');
+      
+      return {
+        message: "Analytics retrieved successfully",
+        data: {
+          period: {
+            startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+            endDate: new Date().toISOString()
+          },
+          summary: {
+            totalNotifications: this.notificationStats.total,
+            sentNotifications: this.notificationStats.sent,
+            failedNotifications: this.notificationStats.failed,
+            successRate: this.notificationStats.successRate
+          },
+          breakdown: {
+            byType: [
+              { type: "EMAIL", count: this.notificationStats.sent },
+              { type: "SMS", count: 3 }
+            ],
+            byProvider: [
+              { provider: "MOCK_BREVO", count: this.notificationStats.sent },
+              { provider: "MOCK_SMS", count: 3 }
+            ]
+          },
+          recentNotifications: this.notifications.slice(-5),
+          timestamp: new Date().toISOString()
+        }
+      };
+    } catch (error) {
+      // Track error metric
+      errors.inc({ 
+        service: 'notification-service', 
+        error_type: 'analytics_failed', 
+        route: 'GET /analytics' 
+      });
+      throw error;
+    }
   }
 
   // ========== MICROSERVICE MESSAGE PATTERNS ==========
@@ -110,6 +128,14 @@ export class NotificationServiceController {
       return { success: true, data: status };
     } catch (error) {
       this.logger.error(`Health check failed: ${error.message}`);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'notification-service', 
+        error_type: 'health_check_failed', 
+        route: 'notification.health' 
+      });
+      
       return { success: false, error: error.message };
     }
   }
@@ -131,6 +157,13 @@ export class NotificationServiceController {
     } catch (error) {
       this.logger.error(`Notification failed: ${error.message}`, error.stack);
       
+      // Track error metric
+      errors.inc({ 
+        service: 'notification-service', 
+        error_type: 'notification_send_failed', 
+        route: 'notification.send' 
+      });
+      
       if (context) {
         const channel = context.getChannelRef();
         const originalMsg = context.getMessage();
@@ -150,6 +183,14 @@ export class NotificationServiceController {
       return { success: true, data: result, message: 'Email sent successfully' };
     } catch (error) {
       this.logger.error(`Email failed: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'notification-service', 
+        error_type: 'email_send_failed', 
+        route: 'email.send' 
+      });
+      
       return { success: false, error: error.message };
     }
   }
@@ -175,6 +216,14 @@ export class NotificationServiceController {
       return { success: true, data: result, message: 'Payment confirmation sent' };
     } catch (error) {
       this.logger.error(`Payment confirmation failed: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'notification-service', 
+        error_type: 'payment_confirmation_failed', 
+        route: 'notification.payment.confirmation' 
+      });
+      
       return { success: false, error: error.message };
     }
   }
@@ -200,6 +249,14 @@ export class NotificationServiceController {
       return { success: true, data: result, message: 'Tickets delivered' };
     } catch (error) {
       this.logger.error(`Ticket delivery failed: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'notification-service', 
+        error_type: 'ticket_delivery_failed', 
+        route: 'notification.ticket.delivery' 
+      });
+      
       return { success: false, error: error.message };
     }
   }
@@ -224,6 +281,14 @@ export class NotificationServiceController {
       return { success: true, data: result, message: 'Event reminder sent' };
     } catch (error) {
       this.logger.error(`Event reminder failed: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'notification-service', 
+        error_type: 'event_reminder_failed', 
+        route: 'notification.event.reminder' 
+      });
+      
       return { success: false, error: error.message };
     }
   }
@@ -241,6 +306,14 @@ export class NotificationServiceController {
       return { success: true, message: 'Payment notifications triggered' };
     } catch (error) {
       this.logger.error(`Failed to trigger payment notifications: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'notification-service', 
+        error_type: 'payment_completed_handler_failed', 
+        route: 'payment.completed' 
+      });
+      
       return { success: false, error: error.message };
     }
   }
@@ -256,6 +329,14 @@ export class NotificationServiceController {
       return { success: true, message: 'Order notifications triggered' };
     } catch (error) {
       this.logger.error(`Failed to trigger order notifications: ${error.message}`, error.stack);
+      
+      // Track error metric
+      errors.inc({ 
+        service: 'notification-service', 
+        error_type: 'order_confirmed_handler_failed', 
+        route: 'order.confirmed' 
+      });
+      
       return { success: false, error: error.message };
     }
   }
@@ -302,6 +383,13 @@ export class NotificationServiceController {
       (this.notificationStats.sent / this.notificationStats.total) * 100
     );
     
+    // Track business metric
+    notificationsSent.inc({ 
+      service: 'notification-service', 
+      type: data.type?.toLowerCase() || 'email',
+      provider: 'mock_brevo'
+    });
+    
     // Mock email sending logic
     await this.mockEmailSending(notification);
     
@@ -346,25 +434,45 @@ export class NotificationServiceController {
 
   @Get('notifications')
   async getAllNotifications() {
-    return {
-      message: "Recent notifications retrieved",
-      data: {
-        notifications: this.notifications.slice(-10),
-        total: this.notifications.length
-      }
-    };
+    try {
+      return {
+        message: "Recent notifications retrieved",
+        data: {
+          notifications: this.notifications.slice(-10),
+          total: this.notifications.length
+        }
+      };
+    } catch (error) {
+      // Track error metric
+      errors.inc({ 
+        service: 'notification-service', 
+        error_type: 'get_notifications_failed', 
+        route: 'GET /notifications' 
+      });
+      throw error;
+    }
   }
 
   @Post('test')
   async testNotification() {
-    return this.processNotification({
-      type: 'email',
-      recipient: 'test@example.com',
-      recipientName: 'Test User',
-      subject: 'Test Notification',
-      message: 'This is a test notification',
-      eventType: 'test',
-      orderId: 'test-order-123'
-    });
+    try {
+      return this.processNotification({
+        type: 'email',
+        recipient: 'test@example.com',
+        recipientName: 'Test User',
+        subject: 'Test Notification',
+        message: 'This is a test notification',
+        eventType: 'test',
+        orderId: 'test-order-123'
+      });
+    } catch (error) {
+      // Track error metric
+      errors.inc({ 
+        service: 'notification-service', 
+        error_type: 'test_notification_failed', 
+        route: 'POST /test' 
+      });
+      throw error;
+    }
   }
 }
