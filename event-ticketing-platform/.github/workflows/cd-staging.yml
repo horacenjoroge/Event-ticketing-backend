@@ -1,0 +1,40 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [ develop ]
+  workflow_run:
+    workflows: ["CI Pipeline"]
+    types: [completed]
+    branches: [ develop ]
+
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Deploy to staging
+      run: |
+        # Update docker-compose with new image tags
+        sed -i "s/:latest/:${{ github.sha }}/g" deployment/docker/docker-compose.staging.yml
+        
+        # Deploy to staging server
+        scp deployment/docker/docker-compose.staging.yml ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_HOST }}:~/
+        ssh ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_HOST }} "docker-compose -f docker-compose.staging.yml pull && docker-compose -f docker-compose.staging.yml up -d"
+    
+    - name: Run smoke tests
+      run: |
+        # Wait for services to be ready
+        sleep 60
+        # Run your load test script against staging
+        node scripts/load-test.js --requests=50 --concurrent=5 --target=${{ secrets.STAGING_URL }}
+    
+    - name: Notify team
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        channel: '#deployments'
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}

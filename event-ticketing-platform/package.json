@@ -46,6 +46,39 @@
     "test:notification-service": "jest --config apps/notification-service/jest.json",
     "test:all": "npm run test:api-gateway && npm run test:user-service && npm run test:event-service && npm run test:ticket-service && npm run test:order-service && npm run test:payment-service && npm run test:notification-service",
     
+
+    "prisma:generate": "npm run prisma:generate:user && npm run prisma:generate:event && npm run prisma:generate:ticket && npm run prisma:generate:order && npm run prisma:generate:payment && npm run prisma:generate:notification",
+    "prisma:generate:user": "cd apps/user-service && npx prisma generate",
+    "prisma:generate:event": "cd apps/event-service && npx prisma generate", 
+    "prisma:generate:ticket": "cd apps/ticket-service && npx prisma generate",
+    "prisma:generate:order": "cd apps/order-service && npx prisma generate",
+    "prisma:generate:payment": "cd apps/payment-service && npx prisma generate",
+    "prisma:generate:notification": "cd apps/notification-service && npx prisma generate",
+    
+    "migrate:dev": "npm run migrate:user:dev && npm run migrate:event:dev && npm run migrate:ticket:dev && npm run migrate:order:dev && npm run migrate:payment:dev && npm run migrate:notification:dev",
+    "migrate:user:dev": "cd apps/user-service && npx prisma migrate dev",
+    "migrate:event:dev": "cd apps/event-service && npx prisma migrate dev",
+    "migrate:ticket:dev": "cd apps/ticket-service && npx prisma migrate dev",
+    "migrate:order:dev": "cd apps/order-service && npx prisma migrate dev",
+    "migrate:payment:dev": "cd apps/payment-service && npx prisma migrate dev",
+    "migrate:notification:dev": "cd apps/notification-service && npx prisma migrate dev",
+    
+    "staging:start": "docker-compose -f deployment/docker/docker-compose.staging.yml up -d",
+    "staging:stop": "docker-compose -f deployment/docker/docker-compose.staging.yml down",
+    "staging:logs": "docker-compose -f deployment/docker/docker-compose.staging.yml logs -f",
+    "staging:health": "curl -f http://localhost:8081/health",
+    
+    "test:env:start": "docker-compose -f deployment/docker/docker-compose.test.yml up -d",
+    "test:env:stop": "docker-compose -f deployment/docker/docker-compose.test.yml down",
+    "test:env:health": "curl -f http://localhost:5100/health",
+    
+    "ports:check": "./scripts/check-ports-safe.sh",
+    "ports:monitor": "./scripts/port-monitor.sh",
+    "ports:cleanup": "./scripts/cleanup-ports.sh",
+    
+    "load:test:staging": "node scripts/load-test.js --requests=100 --concurrent=10 --target=http://localhost:8081",
+    "load:test:ci": "node scripts/load-test.js --requests=50 --concurrent=5 --target=http://localhost:5100",
+
     "docker:build": "docker compose build",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",

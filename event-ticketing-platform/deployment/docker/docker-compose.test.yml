@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  # Test PostgreSQL
+  postgres-test:
+    image: postgres:15-alpine
+    container_name: postgres-test
+    environment:
+      POSTGRES_DB: test_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: test_password
+    ports:
+      - "5440:5432"  # Test DB on 5440
+    tmpfs:
+      - /var/lib/postgresql/data  # In-memory for faster tests
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Test Redis
+  redis-test:
+    image: redis:7-alpine
+    container_name: redis-test
+    ports:
+      - "6381:6379"  # Test Redis on 6381
+    tmpfs:
+      - /data  # In-memory for faster tests
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Test RabbitMQ
+  rabbitmq-test:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq-test
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin123
+    ports:
+      - "5674:5672"   # Test RabbitMQ on 5674
+      - "15674:15672" # Test RabbitMQ Management on 15674
+    tmpfs:
+      - /var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Test API Gateway
+  api-gateway-test:
+    build:
+      context: ../../
+      dockerfile: apps/api-gateway/dockerfile
+    container_name: api-gateway-test
+    environment:
+      - NODE_ENV=test
+      - API_GATEWAY_PORT=3000
+      - DATABASE_URL=postgresql://postgres:test_password@postgres-test:5432/test_db
+      - RABBITMQ_URL=amqp://admin:admin123@rabbitmq-test:5672
+      - REDIS_URL=redis://redis-test:6379
+      - JWT_SECRET=test-jwt-secret-key
+      - SERVICE_NAME=api-gateway-test
+      - ENABLE_METRICS=false
+      - APP_VERSION=1.0.0-test
+    ports:
+      - "5100:3000"  # Test API Gateway on 5100
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+      rabbitmq-test:
+        condition: service_healthy
+
+networks:
+  default:
+    driver: bridge

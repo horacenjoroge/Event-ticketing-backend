@@ -1,0 +1,132 @@
+version: '3.8'
+
+services:
+  # Staging Load Balancer (port 8081 to avoid conflict with prod port 80)
+  nginx-staging:
+    image: nginx:alpine
+    container_name: nginx-staging
+    ports:
+      - "8081:80"
+    volumes:
+      - ../../nginx/nginx.staging.conf:/etc/nginx/nginx.conf:ro
+      - ../../nginx/logs:/var/log/nginx
+    depends_on:
+      - api-gateway-staging
+    networks:
+      - staging-network
+
+  # Staging API Gateway (using your existing Dockerfile)
+  api-gateway-staging:
+    build:
+      context: ../../
+      dockerfile: apps/api-gateway/dockerfile
+    container_name: api-gateway-staging
+    environment:
+      - NODE_ENV=staging
+      - API_GATEWAY_PORT=3000
+      - RABBITMQ_URL=amqp://admin:admin123@rabbitmq-staging:5672
+      - REDIS_URL=redis://redis-staging:6379
+      - JWT_SECRET=staging-jwt-secret-key
+      - ENABLE_SWAGGER=true
+      - SERVICE_NAME=api-gateway-staging
+      - ENABLE_METRICS=true
+      - APP_VERSION=1.0.0-staging
+    ports:
+      - "4000:3000"  # Staging API Gateway on 4000
+    depends_on:
+      - postgres-staging
+      - redis-staging
+      - rabbitmq-staging
+    networks:
+      - staging-network
+
+  # Staging User Service
+  user-service-staging:
+    build:
+      context: ../../
+      dockerfile: apps/user-service/Dockerfile
+    container_name: user-service-staging
+    environment:
+      - NODE_ENV=staging
+      - USER_SERVICE_PORT=3001
+      - DATABASE_URL=postgresql://postgres:staging_password@postgres-staging:5432/user_service_db
+      - RABBITMQ_URL=amqp://admin:admin123@rabbitmq-staging:5672
+      - REDIS_URL=redis://redis-staging:6379
+      - JWT_SECRET=staging-jwt-secret-key
+      - SERVICE_NAME=user-service-staging
+      - ENABLE_METRICS=true
+      - APP_VERSION=1.0.0-staging
+    ports:
+      - "4001:3001"
+    depends_on:
+      - postgres-staging
+      - redis-staging
+      - rabbitmq-staging
+    networks:
+      - staging-network
+
+  # Staging Infrastructure
+  postgres-staging:
+    image: postgres:15-alpine
+    container_name: postgres-staging
+    environment:
+      POSTGRES_DB: user_service_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: staging_password
+    ports:
+      - "5438:5432"  # Staging DB on 5438 (next available after 5437)
+    volumes:
+      - staging_postgres_data:/var/lib/postgresql/data
+      - ../../infrastructure/sql/init-user-db.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - staging-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  redis-staging:
+    image: redis:7-alpine
+    container_name: redis-staging
+    command: redis-server --appendonly yes
+    ports:
+      - "6380:6379"  # Staging Redis on 6380
+    volumes:
+      - staging_redis_data:/data
+    networks:
+      - staging-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  rabbitmq-staging:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq-staging
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin123
+      RABBITMQ_DEFAULT_VHOST: /
+    ports:
+      - "5673:5672"   # Staging RabbitMQ on 5673
+      - "15673:15672" # Staging RabbitMQ Management on 15673
+    volumes:
+      - staging_rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - staging-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  staging_postgres_data:
+  staging_redis_data:
+  staging_rabbitmq_data:
+
+networks:
+  staging-network:
+    driver: bridge
